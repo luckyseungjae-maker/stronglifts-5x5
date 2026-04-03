@@ -1,8 +1,8 @@
-import { useState, useEffect } from “react”;
-import { db } from “./firebase”;
+import { useState, useEffect } from 'react';
+import { db } from './firebase';
 import {
 doc, getDoc, setDoc, deleteDoc, collection, getDocs
-} from “firebase/firestore”;
+} from 'firebase/firestore';
 
 // \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 // \uc6b4\ub3d9 \ub370\uc774\ud130
