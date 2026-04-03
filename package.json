@@ -10,8 +10,9 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "node fix-quotes.js && DISABLE_ESLINT_PLUGIN=true react-scripts build",
-    "prebuild": "node fix-quotes.js"
+   "build": "DISABLE_ESLINT_PLUGIN=true react-scripts build",
+"prebuild": "",
+
   },
   "browserslist": {
     "production": [
