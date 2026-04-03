@@ -1,15 +1,9 @@
 const fs = require(‘fs’);
-const path = require(‘path’);
-
-const filePath = path.join(__dirname, ‘src’, ‘App.js’);
+const filePath = ‘./src/App.js’;
 let content = fs.readFileSync(filePath, ‘utf8’);
-
-// Fix smart double quotes
-content = content.replace(/\u201c/g, ‘”’);
-content = content.replace(/\u201d/g, ‘”’);
-// Fix smart single quotes  
-content = content.replace(/\u2018/g, “’”);
-content = content.replace(/\u2019/g, “’”);
-
+content = content.split(’\u201c’).join(’”’);
+content = content.split(’\u201d’).join(’”’);
+content = content.split(’\u2018’).join(”’”);
+content = content.split(’\u2019’).join(”’”);
 fs.writeFileSync(filePath, content, ‘utf8’);
-console.log(‘Quotes fixed successfully!’);
+console.log(‘Done!’);
