@@ -10,19 +10,17 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build"
-  },
-  "eslintConfig": {
-    "extends": ["react-app"],
-    "rules": {
-      "no-irregular-whitespace": "off"
-    }
-  },
-  "env": {
-    "DISABLE_ESLINT_PLUGIN": "true"
+    "build": "node fix-quotes.js && DISABLE_ESLINT_PLUGIN=true react-scripts build",
+    "prebuild": "node fix-quotes.js"
   },
   "browserslist": {
-    "production": [">0.2%", "not dead", "not op_mini all"],
-    "development": ["last 1 chrome version"]
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version"
+    ]
   }
 }
