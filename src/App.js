@@ -283,7 +283,8 @@ const [resetConfirm, setResetConfirm] = useState(false);
 const [restTimer, setRestTimer] = useState(null);
 const [difficulty, setDifficulty] = useState({});
 const [showAdmin, setShowAdmin] = useState(false);
-const [lowerChoice, setLowerChoice] = useState(null); // null = not chosen yet
+const [lowerChoice, setLowerChoice] = useState(null);
+const [showWeightEdit, setShowWeightEdit] = useState(false);
 
 const DIFFICULTY_OPTIONS = [
 { key: “easy”, label: “적당했어요”, seconds: 90, color: “#6de8a0”, bg: “#1a2e1a”, emoji: “😊” },
@@ -408,6 +409,33 @@ return (
 </div>
 );
 }
+
+if (showWeightEdit) return (
+<div style={{ minHeight: “100vh”, background: “#0f0f0f”, padding: 20 }}>
+<div style={{ maxWidth: 480, margin: “0 auto” }}>
+<div style={{ display: “flex”, justifyContent: “space-between”, alignItems: “center”, marginBottom: 24, paddingTop: 20 }}>
+<h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: “#f0ede8” }}>중량 설정</h2>
+<button onClick={() => setShowWeightEdit(false)} style={{ background: “#222”, border: “1px solid #333”, borderRadius: 8, color: “#aaa”, padding: “6px 14px”, cursor: “pointer” }}>닫기</button>
+</div>
+<div style={{ background: “#1a1a1a”, borderRadius: 16, padding: 20, border: “1px solid #2a2a2a”, marginBottom: 16 }}>
+{Object.entries(weights).map(([name, w]) => (
+<div key={name} style={{ display: “flex”, justifyContent: “space-between”, alignItems: “center”, padding: “12px 0”, borderBottom: “1px solid #222” }}>
+<span style={{ fontSize: 14, color: “#f0ede8” }}>{name}</span>
+<div style={{ display: “flex”, alignItems: “center”, gap: 8 }}>
+<button onClick={() => setWeights(prev => ({ …prev, [name]: Math.max(0, prev[name] - 5) }))} style={{ width: 36, height: 36, borderRadius: 8, background: “#222”, border: “1px solid #444”, color: “#f0ede8”, fontSize: 20, cursor: “pointer” }}>-</button>
+<span style={{ fontSize: 16, fontWeight: 700, color: “#e8c96d”, minWidth: 55, textAlign: “center” }}>{w}kg</span>
+<button onClick={() => setWeights(prev => ({ …prev, [name]: prev[name] + 5 }))} style={{ width: 36, height: 36, borderRadius: 8, background: “#222”, border: “1px solid #444”, color: “#f0ede8”, fontSize: 20, cursor: “pointer” }}>+</button>
+</div>
+</div>
+))}
+</div>
+<button onClick={() => setShowWeightEdit(false)} style={{ width: “100%”, padding: “14px”, background: “linear-gradient(135deg, #e8c96d, #d4a843)”, border: “none”, borderRadius: 12, fontSize: 15, fontWeight: 800, color: “#111”, cursor: “pointer” }}>
+저장 완료
+</button>
+<p style={{ textAlign: “center”, color: “#555”, fontSize: 12, marginTop: 12 }}>변경사항은 자동으로 저장돼요</p>
+</div>
+</div>
+);
 
 return (
 <div style={{ minHeight: “100vh”, background: “#0f0f0f”, color: “#f0ede8”, fontFamily: “‘Noto Sans KR’, sans-serif”, maxWidth: 480, margin: “0 auto”, paddingBottom: 80 }}>
@@ -680,6 +708,9 @@ return (
           </div>
         ))}
         <div style={{ marginTop: 32, paddingTop: 20, borderTop: "1px solid #1e1e1e" }}>
+          <button onClick={() => setShowWeightEdit(true)} style={{ width: "100%", padding: "13px", background: "none", border: "1px solid #2a4a2a", borderRadius: 12, color: "#6de8a0", fontSize: 14, cursor: "pointer", marginBottom: 10 }}>
+            중량 설정 변경
+          </button>
           {!resetConfirm ? (
             <button onClick={() => setResetConfirm(true)} style={{ width: "100%", padding: "13px", background: "none", border: "1px solid #3a2020", borderRadius: 12, color: "#e87a6d", fontSize: 14, cursor: "pointer" }}>
               🗑 내 기록 초기화
