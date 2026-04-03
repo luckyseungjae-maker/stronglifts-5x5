@@ -438,7 +438,7 @@ if (showWeightEdit) return (
 );
 
 return (
-<div style={{ minHeight: “100vh”, background: “#0f0f0f”, color: “#f0ede8”, fontFamily: “‘Noto Sans KR’, sans-serif”, maxWidth: 480, margin: “0 auto”, paddingBottom: 80 }}>
+<div style={{ minHeight: “100vh”, background: “#0f0f0f”, color: “#f0ede8”, fontFamily: “‘Noto Sans KR’, sans-serif”, maxWidth: 480, width: “100%”, margin: “0 auto”, paddingBottom: 80, overflowX: “hidden”, boxSizing: “border-box” }}>
 {showAdmin && <AdminPanel currentUid={uid} onClose={() => setShowAdmin(false)} />}
 
 ```
@@ -486,7 +486,7 @@ return (
     ))}
   </div>
 
-  <div style={{ padding: "20px 16px" }}>
+  <div style={{ padding: "20px 16px", overflowX: "hidden" }}>
     {tab === 0 && (
       <div>
         {!session ? (
