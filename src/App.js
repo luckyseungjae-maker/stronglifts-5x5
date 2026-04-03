@@ -6,19 +6,19 @@ doc, getDoc, setDoc, deleteDoc, collection, getDocs
 
 const LOWER_OPTIONS = {
 bulgarian: { name: “불가리안 스플릿 스쿼트”, sets: 3, reps: 8, increment: 5, note: “양손 합산 · 각 다리”, isBulgarian: true },
-squat: { name: “스쿼트”, sets: 5, reps: 5, increment: 10 },
+squat: { name: “스쿼트”, sets: 5, reps: 5, increment: 5 },
 };
 
 const getWorkouts = (lowerType) => ({
 A: [
 LOWER_OPTIONS[lowerType],
-{ name: “벤치프레스”, sets: 5, reps: 5, increment: 10 },
-{ name: “바벨 로우”, sets: 5, reps: 5, increment: 10 },
+{ name: “벤치프레스”, sets: 5, reps: 5, increment: 5 },
+{ name: “바벨 로우”, sets: 5, reps: 5, increment: 5 },
 ],
 B: [
 LOWER_OPTIONS[lowerType],
-{ name: “오버헤드 프레스”, sets: 5, reps: 5, increment: 10 },
-{ name: “데드리프트”, sets: 1, reps: 5, increment: 10 },
+{ name: “오버헤드 프레스”, sets: 5, reps: 5, increment: 5 },
+{ name: “데드리프트”, sets: 1, reps: 5, increment: 5 },
 ],
 });
 
@@ -483,9 +483,25 @@ return (
                 );
               })}
             </div>
-            <button onClick={startSession} style={{ width: "100%", padding: "16px", background: "linear-gradient(135deg, #e8c96d, #d4a843)", border: "none", borderRadius: 12, fontSize: 16, fontWeight: 800, color: "#111", cursor: "pointer" }}>
-              💪 운동 시작
-            </button>
+            {lowerChoice === null ? (
+              <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a" }}>
+                <div style={{ fontSize: 14, color: "#888", marginBottom: 14, textAlign: "center" }}>오늘 하체 운동을 선택하세요</div>
+                <div style={{ display: "flex", gap: 10 }}>
+                  <button onClick={() => setLowerChoice("bulgarian")}
+                    style={{ flex: 1, padding: "16px 8px", background: "#111", border: "2px solid #2a2a2a", borderRadius: 12, color: "#f0ede8", fontSize: 13, fontWeight: 600, cursor: "pointer", lineHeight: 1.6, textAlign: "center" }}>
+                    불가리안 스플릿 스쿼트
+                  </button>
+                  <button onClick={() => setLowerChoice("squat")}
+                    style={{ flex: 1, padding: "16px 8px", background: "#111", border: "2px solid #2a2a2a", borderRadius: 12, color: "#f0ede8", fontSize: 13, fontWeight: 600, cursor: "pointer", lineHeight: 1.6, textAlign: "center" }}>
+                    스쿼트
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button onClick={() => startSession(lowerChoice)} style={{ width: "100%", padding: "16px", background: "linear-gradient(135deg, #e8c96d, #d4a843)", border: "none", borderRadius: 12, fontSize: 16, fontWeight: 800, color: "#111", cursor: "pointer" }}>
+                💪 운동 시작 ({lowerChoice === "bulgarian" ? "불가리안" : "스쿼트"})
+              </button>
+            )}
           </div>
         ) : done ? (
           <div style={{ textAlign: "center", padding: "40px 0" }}>
@@ -743,7 +759,7 @@ return (
     <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
       <h3 style={{ margin: "0 0 16px", fontSize: 16, color: "#e8c96d", fontWeight: 800 }}>중량 증가 원칙</h3>
       {[
-        { icon: "V", title: "성공 시", desc: "다음 세션에 자동으로 중량이 올라가요 (하체 +5kg, 상체 +10kg)" },
+        { icon: "V", title: "성공 시", desc: "다음 세션에 자동으로 중량이 5kg 올라가요. 모든 운동 동일!" },
         { icon: "X", title: "실패 시", desc: "실패 횟수가 쌓여요. 3회 연속 실패하면 중량이 10% 감량돼요." },
         { icon: "T", title: "휴식 시간", desc: "세트 완료 후 난이도에 따라 90초~5분 휴식을 취하세요." },
       ].map(item => (
