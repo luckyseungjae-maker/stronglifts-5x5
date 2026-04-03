@@ -10,6 +10,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - name: Fix file
+        run: |
+          python3 - << 'PYEOF'
+import re
+with open('src/App.js', 'r') as f:
+    c = f.read()
+c = c.replace('\u201c', '"').replace('\u201d', '"')
+c = c.replace('\u2018', "'").replace('\u2019', "'")
+c = c.replace('\u2026', '...')
+c = re.sub(r'\n```\n', '\n', c)
+c = re.sub(r'\n```\s*\n', '\n', c)
+c = re.sub(r'\n```$', '', c, flags=re.MULTILINE)
+with open('src/App.js', 'w') as f:
+    f.write(c)
+print("Done!")
+PYEOF
       - name: Commit
         run: |
           git config user.email "action@github.com"
