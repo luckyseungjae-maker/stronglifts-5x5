@@ -767,73 +767,153 @@ return (
 
 {tab === 3 && (
   <div>
+
+    {/* 5x5란? */}
     <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
       <h3 style={{ margin: "0 0 12px", fontSize: 18, color: "#e8c96d", fontWeight: 800 }}>StrongLifts 5x5란?</h3>
-      <p style={{ color: "#aaa", fontSize: 14, lineHeight: 1.7, margin: "0 0 12px" }}>StrongLifts 5x5는 가장 검증된 근력 증가 프로그램 중 하나예요. 5가지 핵심 복합 운동을 중심으로, 매 세션마다 중량을 조금씩 늘려가는 방식이에요.</p>
-      <p style={{ color: "#aaa", fontSize: 14, lineHeight: 1.7, margin: 0 }}>초보자부터 중급자까지 효과적이며, 주 3회 운동으로 전신 근력을 균형 있게 발달시킬 수 있어요.</p>
+      <p style={{ color: "#aaa", fontSize: 14, lineHeight: 1.8, margin: "0 0 12px" }}>
+        StrongLifts 5x5는 전 세계 수백만 명이 사용하는 검증된 근력 증가 프로그램이에요. 복잡한 운동 없이 5가지 핵심 복합 운동만으로 전신 근력을 균형 있게 키울 수 있어요.
+      </p>
+      <p style={{ color: "#aaa", fontSize: 14, lineHeight: 1.8, margin: "0 0 12px" }}>
+        핵심 원칙은 단순해요. 매 세션마다 5세트 5회씩 반복하고, 성공하면 다음 세션에 5kg씩 중량을 올려요. 이 점진적 과부하 방식이 근력 성장의 핵심이에요.
+      </p>
+      <p style={{ color: "#aaa", fontSize: 14, lineHeight: 1.8, margin: 0 }}>
+        주 3회 (월/수/금 또는 화/목/토) 운동하며, 초보자부터 중급자까지 누구에게나 효과적이에요.
+      </p>
     </div>
+
+    {/* 프로그램 구성 */}
     <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
       <h3 style={{ margin: "0 0 16px", fontSize: 16, color: "#e8c96d", fontWeight: 800 }}>프로그램 구성</h3>
       {[
-        { title: "워크아웃 A", exercises: ["하체 운동 (불가리안 or 스쿼트)", "벤치프레스 5x5", "바벨 로우 5x5"] },
-        { title: "워크아웃 B", exercises: ["하체 운동 (불가리안 or 스쿼트)", "오버헤드 프레스 5x5", "데드리프트 1x5"] },
+        { title: "워크아웃 A", color: "#6db8e8", exercises: [
+          { name: "하체 운동", detail: "불가리안 스플릿 스쿼트 3x8 또는 스쿼트 5x5" },
+          { name: "벤치프레스", detail: "5세트 x 5회 — 가슴, 어깨 앞쪽, 삼두" },
+          { name: "바벨 로우", detail: "5세트 x 5회 — 등, 이두, 코어" },
+        ]},
+        { title: "워크아웃 B", color: "#6de8a0", exercises: [
+          { name: "하체 운동", detail: "불가리안 스플릿 스쿼트 3x8 또는 스쿼트 5x5" },
+          { name: "오버헤드 프레스", detail: "5세트 x 5회 — 어깨, 삼두, 코어" },
+          { name: "데드리프트", detail: "1세트 x 5회 — 전신 후면 사슬 전체" },
+        ]},
       ].map(w => (
         <div key={w.title} style={{ marginBottom: 14, background: "#111", borderRadius: 10, padding: 14 }}>
-          <div style={{ fontWeight: 700, color: "#e8c96d", marginBottom: 8 }}>{w.title}</div>
+          <div style={{ fontWeight: 700, color: w.color, marginBottom: 10, fontSize: 15 }}>{w.title}</div>
           {w.exercises.map(e => (
-            <div key={e} style={{ fontSize: 13, color: "#aaa", padding: "4px 0", borderBottom: "1px solid #1a1a1a" }}>{e}</div>
+            <div key={e.name} style={{ padding: "8px 0", borderBottom: "1px solid #1a1a1a" }}>
+              <div style={{ fontSize: 14, color: "#f0ede8", fontWeight: 600, marginBottom: 3 }}>{e.name}</div>
+              <div style={{ fontSize: 12, color: "#666" }}>{e.detail}</div>
+            </div>
           ))}
         </div>
       ))}
-      <p style={{ color: "#666", fontSize: 12, margin: "12px 0 0", lineHeight: 1.6 }}>A - B - A - B 순서로 번갈아 진행해요. 세션 사이에 하루 이상 휴식을 취하세요.</p>
+      <div style={{ background: "#111", borderRadius: 10, padding: 14, marginTop: 4 }}>
+        <div style={{ fontSize: 13, color: "#888", lineHeight: 1.7 }}>
+          A - B - A - B 순서로 번갈아 진행해요.<br />
+          예시: 월요일 A, 수요일 B, 금요일 A, 다음주 월요일 B<br />
+          세션 사이에 최소 하루 이상 휴식을 취하세요.
+        </div>
+      </div>
     </div>
+
+    {/* 하체 운동 선택 */}
+    <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
+      <h3 style={{ margin: "0 0 16px", fontSize: 16, color: "#e8c96d", fontWeight: 800 }}>하체 운동 선택</h3>
+      <p style={{ color: "#aaa", fontSize: 13, lineHeight: 1.7, margin: "0 0 14px" }}>
+        매 운동 시작 전 하체 운동을 선택할 수 있어요. 두 운동을 번갈아 해도 좋고, 한 가지만 꾸준히 해도 좋아요.
+      </p>
+      {[
+        { name: "불가리안 스플릿 스쿼트", sets: "3세트 x 8회", pros: ["한쪽 다리씩 독립적으로 훈련 — 좌우 불균형 교정에 효과적", "무릎과 고관절 안정성 향상", "코어 균형 감각 발달", "중량은 양손 합산으로 입력 (한 손에 절반씩)"] },
+        { name: "스쿼트", sets: "5세트 x 5회", pros: ["전통적인 하체 근력 운동의 왕", "대퇴사두, 햄스트링, 둔근, 코어 동시 발달", "높은 중량으로 전신 호르몬 분비 촉진", "바벨을 어깨에 얹고 깊이 앉는 동작"] },
+      ].map(ex => (
+        <div key={ex.name} style={{ background: "#111", borderRadius: 10, padding: 14, marginBottom: 10 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+            <div style={{ fontWeight: 700, color: "#f0ede8", fontSize: 14 }}>{ex.name}</div>
+            <div style={{ fontSize: 12, color: "#e8c96d" }}>{ex.sets}</div>
+          </div>
+          {ex.pros.map((p, i) => (
+            <div key={i} style={{ fontSize: 12, color: "#888", padding: "3px 0", lineHeight: 1.6 }}>• {p}</div>
+          ))}
+        </div>
+      ))}
+    </div>
+
+    {/* 중량 증가 원칙 */}
     <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
       <h3 style={{ margin: "0 0 16px", fontSize: 16, color: "#e8c96d", fontWeight: 800 }}>중량 증가 원칙</h3>
       {[
-        { icon: "V", title: "성공 시", desc: "다음 세션에 자동으로 중량이 5kg 올라가요. 모든 운동 동일!" },
-        { icon: "X", title: "실패 시", desc: "실패 횟수가 쌓여요. 3회 연속 실패하면 중량이 10% 감량돼요." },
-        { icon: "T", title: "휴식 시간", desc: "세트 완료 후 난이도에 따라 90초~5분 휴식을 취하세요." },
+        { color: "#6de8a0", bg: "#1a2e1a", title: "성공 시 (+5kg)", desc: "5세트를 모두 완료하면 다음 세션에 자동으로 5kg 증가해요. 모든 운동 동일하게 적용돼요." },
+        { color: "#e8c96d", bg: "#2e2a1a", title: "실패 시 (카운트 누적)", desc: "세트를 다 완료 못하면 실패 카운트가 올라가요. 3회 연속 실패하면 중량이 자동으로 10% 감량돼요. 너무 아프거나 힘들다면 스스로 중량 설정 변경에서 내릴 수 있어요." },
+        { color: "#e86d6d", bg: "#2e1a1a", title: "정체기가 오면?", desc: "중량이 잘 안 오를 땐 수면, 식사, 스트레스를 점검해보세요. 단백질 섭취를 늘리고 충분한 수면을 취하는 것이 가장 효과적이에요." },
       ].map(item => (
-        <div key={item.title} style={{ display: "flex", gap: 12, padding: "10px 0", borderBottom: "1px solid #222" }}>
-          <div style={{ fontSize: 14, fontWeight: 800, color: "#e8c96d", width: 20 }}>{item.icon}</div>
-          <div>
-            <div style={{ fontWeight: 600, color: "#f0ede8", fontSize: 14, marginBottom: 4 }}>{item.title}</div>
-            <div style={{ color: "#888", fontSize: 13, lineHeight: 1.5 }}>{item.desc}</div>
-          </div>
+        <div key={item.title} style={{ background: item.bg, borderRadius: 10, padding: 14, marginBottom: 10, border: "1px solid " + item.color + "33" }}>
+          <div style={{ fontWeight: 700, color: item.color, fontSize: 14, marginBottom: 6 }}>{item.title}</div>
+          <div style={{ color: "#aaa", fontSize: 13, lineHeight: 1.7 }}>{item.desc}</div>
         </div>
       ))}
     </div>
+
+    {/* 앱 사용법 */}
     <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
       <h3 style={{ margin: "0 0 16px", fontSize: 16, color: "#e8c96d", fontWeight: 800 }}>앱 사용법</h3>
       {[
-        { step: "1", title: "회원가입", desc: "아이디와 비밀번호를 설정하고, 각 운동의 시작 중량을 입력하세요." },
-        { step: "2", title: "하체 운동 선택", desc: "운동 시작 전 불가리안 스플릿 스쿼트 또는 스쿼트 중 선택하세요." },
-        { step: "3", title: "웜업 세트", desc: "본 세트 전에 웜업 세트를 완료하세요. 부상 예방에 매우 중요해요!" },
-        { step: "4", title: "본 세트 완료", desc: "각 세트 완료 후 난이도를 선택하면 자동으로 휴식 타이머가 시작돼요." },
-        { step: "5", title: "운동 저장", desc: "모든 세트 완료 후 저장을 눌러요. 성공한 운동은 다음 세션에 중량이 올라가요." },
-        { step: "6", title: "기록 확인", desc: "기록 탭에서 현재 중량과 지난 세션 기록을 확인하세요." },
+        { step: "1", title: "회원가입", desc: "아이디와 비밀번호(4자 이상)를 입력하고 회원가입하세요. 다음 화면에서 각 운동의 시작 중량을 설정할 수 있어요. 첫 번째 가입자는 자동으로 관리자가 돼요." },
+        { step: "2", title: "하체 운동 선택", desc: "오늘 운동 탭에서 운동 예고를 확인한 후, 오늘 하고 싶은 하체 운동(불가리안 or 스쿼트)을 선택하면 운동 시작 버튼이 활성화돼요." },
+        { step: "3", title: "웜업 세트 완료", desc: "각 운동마다 웜업 세트가 자동으로 계산돼요. 본 세트 전에 반드시 웜업을 완료하세요. 부상 예방에 매우 중요해요!" },
+        { step: "4", title: "본 세트 & 난이도 평가", desc: "세트 버튼을 눌러 완료 체크를 해요. 완료 후 적당/힘듦/실패 중 난이도를 선택하면 자동으로 휴식 타이머가 시작돼요 (90초~5분)." },
+        { step: "5", title: "운동 완료 & 저장", desc: "모든 세트 완료 후 저장 버튼을 누르면 성공한 운동은 다음 세션에 자동으로 5kg 올라가요. 실패한 운동은 카운트가 누적돼요." },
+        { step: "6", title: "기록 & 중량 관리", desc: "기록 탭에서 현재 중량과 최근 10개 세션 기록을 확인할 수 있어요. 중량 설정 변경 버튼으로 언제든 각 운동 중량을 수동으로 조정할 수 있어요." },
       ].map(item => (
-        <div key={item.step} style={{ display: "flex", gap: 12, padding: "12px 0", borderBottom: "1px solid #222" }}>
-          <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#e8c96d22", border: "1px solid #e8c96d44", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 800, color: "#e8c96d", flexShrink: 0 }}>{item.step}</div>
+        <div key={item.step} style={{ display: "flex", gap: 14, padding: "14px 0", borderBottom: "1px solid #222" }}>
+          <div style={{ width: 30, height: 30, borderRadius: "50%", background: "#e8c96d22", border: "1px solid #e8c96d66", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: "#e8c96d", flexShrink: 0 }}>{item.step}</div>
           <div>
-            <div style={{ fontWeight: 600, color: "#f0ede8", fontSize: 14, marginBottom: 4 }}>{item.title}</div>
-            <div style={{ color: "#888", fontSize: 13, lineHeight: 1.5 }}>{item.desc}</div>
+            <div style={{ fontWeight: 700, color: "#f0ede8", fontSize: 14, marginBottom: 5 }}>{item.title}</div>
+            <div style={{ color: "#888", fontSize: 13, lineHeight: 1.7 }}>{item.desc}</div>
           </div>
         </div>
       ))}
     </div>
-    <div style={{ background: "#1a2e1a", borderRadius: 14, padding: 20, border: "1px solid #2a4a2a", marginBottom: 16 }}>
-      <h3 style={{ margin: "0 0 12px", fontSize: 16, color: "#6de8a0", fontWeight: 800 }}>꿀팁</h3>
+
+    {/* 휴식 타이머 */}
+    <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
+      <h3 style={{ margin: "0 0 16px", fontSize: 16, color: "#e8c96d", fontWeight: 800 }}>휴식 타이머 가이드</h3>
       {[
-        "웜업은 절대 건너뛰지 마세요. 부상의 주요 원인이에요.",
-        "중량이 무겁게 느껴지면 더 가볍게 시작하세요. 꾸준함이 핵심이에요.",
-        "스쿼트는 깊이가 중요해요. 허벅지가 바닥과 평행이 될 때까지 내려가세요.",
-        "불가리안 스플릿 스쿼트는 양손 합산 중량을 입력해요.",
-        "데드리프트는 1세트만 하지만 가장 무거운 무게로 진행해요.",
-      ].map((tip, i) => (
-        <div key={i} style={{ fontSize: 13, color: "#6de8a0", padding: "6px 0", borderBottom: i < 4 ? "1px solid #1a3a1a" : "none", lineHeight: 1.5 }}>{tip}</div>
+        { emoji: "😊", label: "적당했어요", time: "90초", color: "#6de8a0", desc: "가볍게 완료했을 때. 짧은 휴식으로도 다음 세트 가능해요." },
+        { emoji: "😅", label: "힘들었어요", time: "3분", color: "#e8c96d", desc: "보통 강도일 때. 충분히 쉬고 다음 세트에 집중하세요." },
+        { emoji: "😤", label: "실패했어요", time: "5분", color: "#e86d6d", desc: "세트를 완료 못했을 때. 충분한 휴식 후 도전하세요." },
+      ].map(item => (
+        <div key={item.label} style={{ display: "flex", gap: 12, padding: "10px 0", borderBottom: "1px solid #222", alignItems: "center" }}>
+          <span style={{ fontSize: 24 }}>{item.emoji}</span>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+              <span style={{ fontWeight: 600, color: item.color, fontSize: 14 }}>{item.label}</span>
+              <span style={{ fontSize: 13, color: item.color, fontWeight: 700 }}>{item.time}</span>
+            </div>
+            <div style={{ fontSize: 12, color: "#666", lineHeight: 1.5 }}>{item.desc}</div>
+          </div>
+        </div>
       ))}
     </div>
+
+    {/* 꿀팁 */}
+    <div style={{ background: "#1a2e1a", borderRadius: 14, padding: 20, border: "1px solid #2a4a2a", marginBottom: 16 }}>
+      <h3 style={{ margin: "0 0 14px", fontSize: 16, color: "#6de8a0", fontWeight: 800 }}>꿀팁 모음</h3>
+      {[
+        { title: "웜업은 필수!", desc: "웜업 세트를 절대 건너뛰지 마세요. 특히 무거운 중량일수록 더 중요해요." },
+        { title: "가볍게 시작하세요", desc: "처음엔 가벼운 중량으로 시작하는 게 좋아요. 폼을 익히고 꾸준히 올리는 게 훨씬 효과적이에요." },
+        { title: "스쿼트 깊이", desc: "허벅지가 바닥과 평행이 될 때까지 내려가세요. 깊이가 얕으면 효과가 절반이에요." },
+        { title: "불가리안 중량 입력", desc: "불가리안 스플릿 스쿼트는 양손 합산 중량을 입력해요. 한 손에 10kg이면 20kg 입력!" },
+        { title: "데드리프트는 1세트", desc: "데드리프트는 1세트만 하지만 가장 무거운 무게로 최대한 집중해서 해요." },
+        { title: "단백질과 수면", desc: "운동만큼 중요한 게 회복이에요. 체중 1kg당 1.6~2g의 단백질 섭취와 7~8시간 수면을 목표로 하세요." },
+        { title: "정체기는 자연스러워요", desc: "중량이 안 오르는 시기가 반드시 와요. 3회 실패 후 자동 감량 후 다시 올라가는 게 정상 과정이에요." },
+      ].map((tip, i) => (
+        <div key={i} style={{ padding: "10px 0", borderBottom: i < 6 ? "1px solid #1a3a1a" : "none" }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#6de8a0", marginBottom: 3 }}>{tip.title}</div>
+          <div style={{ fontSize: 12, color: "#4a8a5a", lineHeight: 1.6 }}>{tip.desc}</div>
+        </div>
+      ))}
+    </div>
+
   </div>
 )}
 
