@@ -1,11 +1,9 @@
 import { useState, useEffect } from “react”;
 import { db } from “./firebase”;
-import {
-doc, getDoc, setDoc, deleteDoc, collection, getDocs
-} from “firebase/firestore”;
+import { doc, getDoc, setDoc, deleteDoc, collection, getDocs } from “firebase/firestore”;
 
 const LOWER_OPTIONS = {
-bulgarian: { name: “불가리안 스플릿 스쿼트”, sets: 3, reps: 8, increment: 5, note: “양손 합산 · 각 다리”, isBulgarian: true },
+bulgarian: { name: “불가리안 스플릿 스쿼트”, sets: 3, reps: 8, increment: 5, note: “양손 합산 각 다리”, isBulgarian: true },
 squat: { name: “스쿼트”, sets: 5, reps: 5, increment: 5 },
 };
 
@@ -101,10 +99,10 @@ const [pw, setPw] = useState(””);
 const [mode, setMode] = useState(“login”);
 const [error, setError] = useState(””);
 const [loading, setLoading] = useState(false);
-const [step, setStep] = useState(“auth”); // “auth” | “weights”
+const [step, setStep] = useState(“auth”);
 const [pendingUid, setPendingUid] = useState(””);
 const [pendingPw, setPendingPw] = useState(””);
-const [initWeights, setInitWeights] = useState({ …DEFAULT_WEIGHTS });
+const [initWeights, setInitWeights] = useState(Object.assign({}, DEFAULT_WEIGHTS));
 
 const handle = async () => {
 if (!id.trim() || !pw.trim()) { setError(“아이디와 비밀번호를 입력해주세요.”); return; }
@@ -145,12 +143,42 @@ setLoading(false);
 }
 };
 
+if (step === “weights”) return (
+<div style={{ minHeight: “100vh”, background: “#0f0f0f”, display: “flex”, alignItems: “center”, justifyContent: “center”, padding: 20 }}>
+<div style={{ width: “100%”, maxWidth: 400 }}>
+<div style={{ textAlign: “center”, marginBottom: 24 }}>
+<div style={{ fontSize: 40, marginBottom: 8 }}>⚖️</div>
+<h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: “#f0ede8” }}>시작 중량 설정</h2>
+<p style={{ color: “#555”, fontSize: 13, marginTop: 6 }}>각 운동의 시작 중량을 입력해주세요</p>
+</div>
+<div style={{ background: “#1a1a1a”, borderRadius: 16, padding: 20, border: “1px solid #2a2a2a”, marginBottom: 16 }}>
+{Object.entries(initWeights).map(([name, w]) => (
+<div key={name} style={{ display: “flex”, justifyContent: “space-between”, alignItems: “center”, padding: “10px 0”, borderBottom: “1px solid #222” }}>
+<span style={{ fontSize: 14, color: “#f0ede8” }}>{name}</span>
+<div style={{ display: “flex”, alignItems: “center”, gap: 8 }}>
+<button onClick={() => setInitWeights(prev => Object.assign({}, prev, { [name]: Math.max(0, prev[name] - 5) }))}
+style={{ width: 32, height: 32, borderRadius: 8, background: “#222”, border: “1px solid #444”, color: “#f0ede8”, fontSize: 18, cursor: “pointer” }}>-</button>
+<span style={{ fontSize: 16, fontWeight: 700, color: “#e8c96d”, minWidth: 50, textAlign: “center” }}>{w}kg</span>
+<button onClick={() => setInitWeights(prev => Object.assign({}, prev, { [name]: prev[name] + 5 }))}
+style={{ width: 32, height: 32, borderRadius: 8, background: “#222”, border: “1px solid #444”, color: “#f0ede8”, fontSize: 18, cursor: “pointer” }}>+</button>
+</div>
+</div>
+))}
+</div>
+<button onClick={handleWeightsDone} disabled={loading}
+style={{ width: “100%”, padding: “14px”, background: “linear-gradient(135deg, #e8c96d, #d4a843)”, border: “none”, borderRadius: 12, fontSize: 15, fontWeight: 800, color: “#111”, cursor: “pointer” }}>
+{loading ? “처리 중…” : “시작하기”}
+</button>
+</div>
+</div>
+);
+
 return (
 <div style={{ minHeight: “100vh”, background: “#0f0f0f”, display: “flex”, alignItems: “center”, justifyContent: “center”, padding: 20 }}>
 <div style={{ width: “100%”, maxWidth: 400 }}>
 <div style={{ textAlign: “center”, marginBottom: 36 }}>
 <div style={{ fontSize: 48, marginBottom: 8 }}>🏋️</div>
-<h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: “#f0ede8” }}>StrongLifts 5×5</h1>
+<h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: “#f0ede8” }}>StrongLifts 5x5</h1>
 <p style={{ color: “#555”, fontSize: 13, marginTop: 6 }}>나만의 운동 기록을 관리하세요</p>
 </div>
 <div style={{ display: “flex”, background: “#1a1a1a”, borderRadius: 12, padding: 4, marginBottom: 24 }}>
@@ -172,45 +200,13 @@ style={{ width: “100%”, padding: “12px 14px”, background: “#111”, bo
 <input type=“password” value={pw} onChange={e => setPw(e.target.value)} onKeyDown={e => e.key === “Enter” && handle()} placeholder=“비밀번호 입력”
 style={{ width: “100%”, padding: “12px 14px”, background: “#111”, border: “1px solid #333”, borderRadius: 10, color: “#f0ede8”, fontSize: 15, outline: “none”, boxSizing: “border-box” }} />
 </div>
-{error && (
-<div style={{ background: “#2e1a1a”, border: “1px solid #5a2020”, borderRadius: 8, padding: “10px 14px”, color: “#e87a6d”, fontSize: 13, marginBottom: 16 }}>{error}</div>
-)}
+{error && <div style={{ background: “#2e1a1a”, border: “1px solid #5a2020”, borderRadius: 8, padding: “10px 14px”, color: “#e87a6d”, fontSize: 13, marginBottom: 16 }}>{error}</div>}
 <button onClick={handle} disabled={loading}
 style={{ width: “100%”, padding: “14px”, background: loading ? “#555” : “linear-gradient(135deg, #e8c96d, #d4a843)”, border: “none”, borderRadius: 12, fontSize: 15, fontWeight: 800, color: “#111”, cursor: loading ? “default” : “pointer” }}>
 {loading ? “처리 중…” : mode === “login” ? “로그인” : “회원가입”}
 </button>
 </div>
 <p style={{ textAlign: “center”, color: “#333”, fontSize: 12, marginTop: 20 }}>첫 번째 가입자는 자동으로 관리자가 됩니다</p>
-</div>
-</div>
-);
-
-if (step === “weights”) return (
-<div style={{ minHeight: “100vh”, background: “#0f0f0f”, display: “flex”, alignItems: “center”, justifyContent: “center”, padding: 20 }}>
-<div style={{ width: “100%”, maxWidth: 400 }}>
-<div style={{ textAlign: “center”, marginBottom: 24 }}>
-<div style={{ fontSize: 40, marginBottom: 8 }}>⚖️</div>
-<h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: “#f0ede8” }}>시작 중량 설정</h2>
-<p style={{ color: “#555”, fontSize: 13, marginTop: 6 }}>각 운동의 시작 중량을 입력해주세요</p>
-</div>
-<div style={{ background: “#1a1a1a”, borderRadius: 16, padding: 20, border: “1px solid #2a2a2a”, marginBottom: 16 }}>
-{Object.entries(initWeights).map(([name, w]) => (
-<div key={name} style={{ display: “flex”, justifyContent: “space-between”, alignItems: “center”, padding: “10px 0”, borderBottom: “1px solid #222” }}>
-<span style={{ fontSize: 14, color: “#f0ede8” }}>{name}</span>
-<div style={{ display: “flex”, alignItems: “center”, gap: 8 }}>
-<button onClick={() => setInitWeights(prev => ({ …prev, [name]: Math.max(0, prev[name] - 5) }))}
-style={{ width: 32, height: 32, borderRadius: 8, background: “#222”, border: “1px solid #444”, color: “#f0ede8”, fontSize: 18, cursor: “pointer” }}>-</button>
-<span style={{ fontSize: 16, fontWeight: 700, color: “#e8c96d”, minWidth: 50, textAlign: “center” }}>{w}kg</span>
-<button onClick={() => setInitWeights(prev => ({ …prev, [name]: prev[name] + 5 }))}
-style={{ width: 32, height: 32, borderRadius: 8, background: “#222”, border: “1px solid #444”, color: “#f0ede8”, fontSize: 18, cursor: “pointer” }}>+</button>
-</div>
-</div>
-))}
-</div>
-<button onClick={handleWeightsDone} disabled={loading}
-style={{ width: “100%”, padding: “14px”, background: “linear-gradient(135deg, #e8c96d, #d4a843)”, border: “none”, borderRadius: 12, fontSize: 15, fontWeight: 800, color: “#111”, cursor: “pointer” }}>
-{loading ? “처리 중…” : “시작하기 💪”}
-</button>
 </div>
 </div>
 );
@@ -225,7 +221,7 @@ useEffect(() => { getAllUsers().then(u => { setUsers(u); setLoading(false); }); 
 
 const handleDelete = async (uid) => {
 await deleteUser(uid);
-const updated = { …users };
+const updated = Object.assign({}, users);
 delete updated[uid];
 setUsers(updated);
 setConfirm(null);
@@ -235,7 +231,7 @@ return (
 <div style={{ position: “fixed”, inset: 0, background: “#0f0f0f”, zIndex: 100, overflowY: “auto” }}>
 <div style={{ maxWidth: 480, margin: “0 auto”, padding: 20 }}>
 <div style={{ display: “flex”, justifyContent: “space-between”, alignItems: “center”, marginBottom: 24 }}>
-<h2 style={{ margin: 0, color: “#e8c96d”, fontSize: 18 }}>👑 관리자 패널</h2>
+<h2 style={{ margin: 0, color: “#e8c96d”, fontSize: 18 }}>관리자 패널</h2>
 <button onClick={onClose} style={{ background: “#222”, border: “1px solid #333”, borderRadius: 8, color: “#aaa”, padding: “6px 14px”, cursor: “pointer” }}>닫기</button>
 </div>
 <div style={{ background: “#1a1a1a”, borderRadius: 14, border: “1px solid #2a2a2a”, overflow: “hidden” }}>
@@ -269,7 +265,7 @@ confirm === uid ? (
 
 function WorkoutApp({ uid, isAdmin, onLogout }) {
 const [tab, setTab] = useState(0);
-const [weights, setWeights] = useState({ …DEFAULT_WEIGHTS });
+const [weights, setWeights] = useState(Object.assign({}, DEFAULT_WEIGHTS));
 const [history, setHistory] = useState([]);
 const [nextWorkout, setNextWorkout] = useState(“A”);
 const [failCounts, setFailCounts] = useState({});
@@ -311,19 +307,19 @@ saveUserData(uid, { weights, history, next: nextWorkout, fails: failCounts });
 
 useEffect(() => {
 if (!restTimer || restTimer.remaining <= 0) return;
-const id = setTimeout(() => setRestTimer(prev => prev ? { …prev, remaining: prev.remaining - 1 } : null), 1000);
+const id = setTimeout(() => setRestTimer(prev => prev ? Object.assign({}, prev, { remaining: prev.remaining - 1 }) : null), 1000);
 return () => clearTimeout(id);
 }, [restTimer]);
 
 const startRest = (exIdx, setIdx, seconds, diffKey) => {
-setDifficulty(prev => ({ …prev, [`${exIdx}-${setIdx}`]: diffKey }));
+setDifficulty(prev => Object.assign({}, prev, { [exIdx + “-” + setIdx]: diffKey }));
 setRestTimer({ seconds, remaining: seconds, exIdx, setIdx });
 };
 const skipRest = () => setRestTimer(null);
-const formatTime = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+const formatTime = (s) => Math.floor(s / 60) + “:” + String(s % 60).padStart(2, “0”);
 
 const handleReset = async () => {
-const fresh = { weights: { …DEFAULT_WEIGHTS }, history: [], next: “A”, fails: {} };
+const fresh = { weights: Object.assign({}, DEFAULT_WEIGHTS), history: [], next: “A”, fails: {} };
 setWeights(fresh.weights);
 setHistory(fresh.history);
 setNextWorkout(fresh.next);
@@ -335,7 +331,7 @@ await saveUserData(uid, fresh);
 
 const startSession = (lowerType) => {
 const WORKOUTS = getWorkouts(lowerType);
-const exercises = WORKOUTS[nextWorkout].map(e => ({ …e, weight: weights[e.name] || DEFAULT_WEIGHTS[e.name] }));
+const exercises = WORKOUTS[nextWorkout].map(e => Object.assign({}, e, { weight: weights[e.name] || DEFAULT_WEIGHTS[e.name] }));
 const initialWarmup = {};
 exercises.forEach((_, i) => { initialWarmup[i] = true; });
 setSession({ type: nextWorkout, exercises, date: Date.now() });
@@ -346,20 +342,20 @@ setDone(false);
 };
 
 const toggleSet = (prefix, exIdx, setIdx) => {
-const key = `${prefix}-${exIdx}-${setIdx}`;
-setCompletedSets(prev => ({ …prev, [key]: !prev[key] }));
+const key = prefix + “-” + exIdx + “-” + setIdx;
+setCompletedSets(prev => Object.assign({}, prev, { [key]: !prev[key] }));
 };
 
 const isWarmupAllDone = (exIdx, count) =>
-Array.from({ length: count }, (_, i) => completedSets[`w-${exIdx}-${i}`]).every(Boolean);
+Array.from({ length: count }, (_, i) => completedSets[“w-” + exIdx + “-” + i]).every(Boolean);
 
 const isMainAllDone = (exIdx, totalSets) =>
-Array.from({ length: totalSets }, (_, i) => completedSets[`m-${exIdx}-${i}`]).every(Boolean);
+Array.from({ length: totalSets }, (_, i) => completedSets[“m-” + exIdx + “-” + i]).every(Boolean);
 
 const finishSession = () => {
 if (!session) return;
-const newWeights = { …weights };
-const newFails = { …failCounts };
+const newWeights = Object.assign({}, weights);
+const newFails = Object.assign({}, failCounts);
 const results = session.exercises.map((ex, i) => {
 const success = isMainAllDone(i, ex.sets);
 if (success) {
@@ -376,7 +372,7 @@ return { name: ex.name, weight: ex.weight, success };
 });
 setWeights(newWeights);
 setFailCounts(newFails);
-setHistory(prev => [{ type: session.type, date: session.date, results }, …prev.slice(0, 49)]);
+setHistory(prev => [{ type: session.type, date: session.date, results }].concat(prev.slice(0, 49)));
 setNextWorkout(nextWorkout === “A” ? “B” : “A”);
 setDone(true);
 };
@@ -422,9 +418,9 @@ if (showWeightEdit) return (
 <div key={name} style={{ display: “flex”, justifyContent: “space-between”, alignItems: “center”, padding: “12px 0”, borderBottom: “1px solid #222” }}>
 <span style={{ fontSize: 14, color: “#f0ede8” }}>{name}</span>
 <div style={{ display: “flex”, alignItems: “center”, gap: 8 }}>
-<button onClick={() => setWeights(prev => ({ …prev, [name]: Math.max(0, prev[name] - 5) }))} style={{ width: 36, height: 36, borderRadius: 8, background: “#222”, border: “1px solid #444”, color: “#f0ede8”, fontSize: 20, cursor: “pointer” }}>-</button>
+<button onClick={() => setWeights(prev => Object.assign({}, prev, { [name]: Math.max(0, prev[name] - 5) }))} style={{ width: 36, height: 36, borderRadius: 8, background: “#222”, border: “1px solid #444”, color: “#f0ede8”, fontSize: 20, cursor: “pointer” }}>-</button>
 <span style={{ fontSize: 16, fontWeight: 700, color: “#e8c96d”, minWidth: 55, textAlign: “center” }}>{w}kg</span>
-<button onClick={() => setWeights(prev => ({ …prev, [name]: prev[name] + 5 }))} style={{ width: 36, height: 36, borderRadius: 8, background: “#222”, border: “1px solid #444”, color: “#f0ede8”, fontSize: 20, cursor: “pointer” }}>+</button>
+<button onClick={() => setWeights(prev => Object.assign({}, prev, { [name]: prev[name] + 5 }))} style={{ width: 36, height: 36, borderRadius: 8, background: “#222”, border: “1px solid #444”, color: “#f0ede8”, fontSize: 20, cursor: “pointer” }}>+</button>
 </div>
 </div>
 ))}
@@ -438,7 +434,7 @@ if (showWeightEdit) return (
 );
 
 return (
-<div style={{ minHeight: “100vh”, background: “#0f0f0f”, color: “#f0ede8”, fontFamily: “‘Noto Sans KR’, sans-serif”, maxWidth: 480, width: “100%”, margin: “0 auto”, paddingBottom: 80, overflowX: “hidden”, boxSizing: “border-box” }}>
+<div style={{ minHeight: “100vh”, background: “#0f0f0f”, color: “#f0ede8”, fontFamily: “sans-serif”, maxWidth: 480, width: “100%”, margin: “0 auto”, paddingBottom: 80, overflowX: “hidden”, boxSizing: “border-box” }}>
 {showAdmin && <AdminPanel currentUid={uid} onClose={() => setShowAdmin(false)} />}
 
 ```
@@ -446,17 +442,15 @@ return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <span style={{ fontSize: 28 }}>🏋️</span>
-        <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, letterSpacing: "-0.5px", color: "#f0ede8" }}>StrongLifts 5×5</h1>
+        <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: "#f0ede8" }}>StrongLifts 5x5</h1>
       </div>
       <div style={{ display: "flex", gap: 6 }}>
         {isAdmin && (
-          <button onClick={() => setShowAdmin(true)}
-            style={{ padding: "6px 10px", background: "#2e2a1a", border: "1px solid #e8c96d44", borderRadius: 8, color: "#e8c96d", fontSize: 11, cursor: "pointer" }}>
-            👑 관리
+          <button onClick={() => setShowAdmin(true)} style={{ padding: "6px 10px", background: "#2e2a1a", border: "1px solid #e8c96d44", borderRadius: 8, color: "#e8c96d", fontSize: 11, cursor: "pointer" }}>
+            관리
           </button>
         )}
-        <button onClick={onLogout}
-          style={{ padding: "6px 10px", background: "#1e1e1e", border: "1px solid #333", borderRadius: 8, color: "#666", fontSize: 11, cursor: "pointer" }}>
+        <button onClick={onLogout} style={{ padding: "6px 10px", background: "#1e1e1e", border: "1px solid #333", borderRadius: 8, color: "#666", fontSize: 11, cursor: "pointer" }}>
           로그아웃
         </button>
       </div>
@@ -469,7 +463,7 @@ return (
       {isAdmin && <span style={{ fontSize: 10, color: "#e8c96d", background: "#2e2a1a", padding: "1px 6px", borderRadius: 20 }}>관리자</span>}
     </div>
     <div style={{ display: "flex", gap: 16 }}>
-      {[{ label: "총 세션", val: totalSessions }, { label: "연속", val: `${streak}회` }, { label: "다음", val: `워크아웃 ${nextWorkout}` }].map(s => (
+      {[{ label: "총 세션", val: totalSessions }, { label: "연속", val: streak + "회" }, { label: "다음", val: "워크아웃 " + nextWorkout }].map(s => (
         <div key={s.label} style={{ background: "#1e1e1e", borderRadius: 10, padding: "8px 14px", flex: 1, textAlign: "center" }}>
           <div style={{ fontSize: 18, fontWeight: 700, color: "#e8c96d" }}>{s.val}</div>
           <div style={{ fontSize: 11, color: "#666", marginTop: 2 }}>{s.label}</div>
@@ -480,7 +474,7 @@ return (
 
   <div style={{ display: "flex", background: "#161616", borderBottom: "1px solid #222" }}>
     {TABS.map((t, i) => (
-      <button key={t} onClick={() => setTab(i)} style={{ flex: 1, padding: "14px 4px", background: "none", border: "none", color: tab === i ? "#e8c96d" : "#555", fontWeight: tab === i ? 700 : 400, fontSize: 13, cursor: "pointer", borderBottom: tab === i ? "2px solid #e8c96d" : "2px solid transparent" }}>
+      <button key={t} onClick={() => setTab(i)} style={{ flex: 1, padding: "14px 4px", background: "none", border: "none", color: tab === i ? "#e8c96d" : "#555", fontWeight: tab === i ? 700 : 400, fontSize: 12, cursor: "pointer", borderBottom: tab === i ? "2px solid #e8c96d" : "2px solid transparent" }}>
         {t}
       </button>
     ))}
@@ -501,11 +495,11 @@ return (
                   <div key={ex.name} style={{ padding: "12px 0", borderBottom: "1px solid #1e1e1e" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <span style={{ fontSize: 15, fontWeight: 600 }}>{ex.name}</span>
-                      <span style={{ fontSize: 13, color: "#aaa" }}>{ex.sets}×{ex.reps} · <span style={{ color: "#e8c96d", fontWeight: 700 }}>{w}kg</span></span>
+                      <span style={{ fontSize: 13, color: "#aaa" }}>{ex.sets}x{ex.reps} <span style={{ color: "#e8c96d", fontWeight: 700 }}>{w}kg</span></span>
                     </div>
                     {ex.note && <div style={{ fontSize: 11, color: "#6db8e8", marginTop: 3 }}>💡 {ex.note}</div>}
                     <div style={{ fontSize: 11, color: "#444", marginTop: 4 }}>
-                      🔥 웜업: {warmups.map(ws => ws.weight === 0 ? "맨몸" : `${ws.weight}kg`).join(" → ")} → 본세트
+                      웜업: {warmups.map(ws => ws.weight === 0 ? "맨몸" : ws.weight + "kg").join(" → ")} → 본세트
                     </div>
                   </div>
                 );
@@ -542,7 +536,7 @@ return (
                 return (
                   <div key={ex.name} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid #222" }}>
                     <span>{ex.name}</span>
-                    <span style={{ color: success ? "#6de8a0" : "#e86d6d" }}>{success ? "✓ 성공" : "✗ 실패"}</span>
+                    <span style={{ color: success ? "#6de8a0" : "#e86d6d" }}>{success ? "성공" : "실패"}</span>
                   </div>
                 );
               })}
@@ -563,81 +557,80 @@ return (
               const warmupDone = isWarmupAllDone(exIdx, warmupSets.length);
               const mainDone = isMainAllDone(exIdx, ex.sets);
               return (
-                <div key={ex.name} style={{ background: mainDone ? "#1a2a1a" : "#1a1a1a", borderRadius: 14, padding: 16, marginBottom: 14, border: `1px solid ${mainDone ? "#2a4a2a" : "#2a2a2a"}` }}>
+                <div key={ex.name} style={{ background: mainDone ? "#1a2a1a" : "#1a1a1a", borderRadius: 14, padding: 16, marginBottom: 14, border: "1px solid " + (mainDone ? "#2a4a2a" : "#2a2a2a") }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
                     <div>
                       <div style={{ fontWeight: 700, fontSize: 16 }}>{ex.name}</div>
                       <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>
-                        본세트 {ex.sets}×{ex.reps} · <span style={{ color: "#e8c96d" }}>{ex.weight}kg</span>
+                        본세트 {ex.sets}x{ex.reps} <span style={{ color: "#e8c96d" }}>{ex.weight}kg</span>
                         {ex.isBulgarian && <span style={{ color: "#6db8e8" }}> (한 손 {ex.weight / 2}kg)</span>}
                       </div>
                     </div>
                     {mainDone && <span style={{ color: "#6de8a0", fontSize: 22 }}>✓</span>}
                   </div>
                   <div style={{ marginBottom: 12 }}>
-                    <button onClick={() => setShowWarmup(prev => ({ ...prev, [exIdx]: !warmupOpen }))}
-                      style={{ width: "100%", background: warmupDone ? "#1a2e1a" : "#141414", border: `1px solid ${warmupDone ? "#2a4a2a" : "#252525"}`, borderRadius: warmupOpen ? "10px 10px 0 0" : "10px", padding: "9px 12px", color: warmupDone ? "#6de8a0" : "#777", fontSize: 13, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span>🔥 웜업 세트 {warmupDone ? "✓ 완료" : `(${warmupSets.length}세트)`}</span>
-                      <span style={{ fontSize: 11 }}>{warmupOpen ? "▲ 접기" : "▼ 펼치기"}</span>
+                    <button onClick={() => setShowWarmup(prev => Object.assign({}, prev, { [exIdx]: !warmupOpen }))}
+                      style={{ width: "100%", background: warmupDone ? "#1a2e1a" : "#141414", border: "1px solid " + (warmupDone ? "#2a4a2a" : "#252525"), borderRadius: warmupOpen ? "10px 10px 0 0" : "10px", padding: "9px 12px", color: warmupDone ? "#6de8a0" : "#777", fontSize: 13, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span>웜업 세트 {warmupDone ? "완료" : "(" + warmupSets.length + "세트)"}</span>
+                      <span style={{ fontSize: 11 }}>{warmupOpen ? "접기" : "펼치기"}</span>
                     </button>
                     {warmupOpen && (
                       <div style={{ background: "#111", borderRadius: "0 0 10px 10px", padding: "8px 12px", border: "1px solid #252525", borderTop: "none" }}>
                         {warmupSets.map((ws, wi) => {
-                          const isDone = completedSets[`w-${exIdx}-${wi}`];
+                          const isDone = completedSets["w-" + exIdx + "-" + wi];
                           return (
                             <div key={wi} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 0", borderBottom: wi < warmupSets.length - 1 ? "1px solid #1a1a1a" : "none" }}>
                               <div>
                                 <span style={{ fontSize: 13, color: isDone ? "#6de8a0" : "#bbb", fontWeight: 500 }}>{ws.label}</span>
-                                <span style={{ fontSize: 12, color: "#555", marginLeft: 8 }}>{ws.weight === 0 ? "맨몸" : `${ws.weight}kg`} × {ws.reps}회</span>
+                                <span style={{ fontSize: 12, color: "#555", marginLeft: 8 }}>{ws.weight === 0 ? "맨몸" : ws.weight + "kg"} x {ws.reps}회</span>
                                 {ex.isBulgarian && ws.weight > 0 && <span style={{ fontSize: 11, color: "#6db8e8", marginLeft: 4 }}>(한 손 {ws.weight / 2}kg)</span>}
                               </div>
                               <button onClick={() => toggleSet("w", exIdx, wi)}
-                                style={{ width: 34, height: 34, borderRadius: 8, border: `2px solid ${isDone ? "#6de8a0" : "#2a2a2a"}`, background: isDone ? "#1e3a2a" : "#1a1a1a", color: isDone ? "#6de8a0" : "#444", fontSize: 15, cursor: "pointer" }}>
+                                style={{ width: 34, height: 34, borderRadius: 8, border: "2px solid " + (isDone ? "#6de8a0" : "#2a2a2a"), background: isDone ? "#1e3a2a" : "#1a1a1a", color: isDone ? "#6de8a0" : "#444", fontSize: 15, cursor: "pointer" }}>
                                 {isDone ? "✓" : "○"}
                               </button>
                             </div>
                           );
                         })}
-                        <div style={{ fontSize: 11, color: "#333", marginTop: 6, paddingTop: 6, borderTop: "1px solid #1a1a1a" }}>⏱ 웜업 세트 간 휴식 없이 바로 진행</div>
                       </div>
                     )}
                   </div>
                   <div>
                     <div style={{ fontSize: 12, color: "#666", marginBottom: 8 }}>
-                      💪 본 세트 — {ex.weight}kg × {ex.reps}회
-                      {ex.isBulgarian && <span style={{ color: "#6db8e8" }}> · 한 손 {ex.weight / 2}kg</span>}
+                      본 세트 {ex.weight}kg x {ex.reps}회
+                      {ex.isBulgarian && <span style={{ color: "#6db8e8" }}> 한 손 {ex.weight / 2}kg</span>}
                     </div>
                     <div style={{ display: "flex", gap: 8 }}>
                       {Array.from({ length: ex.sets }, (_, i) => {
-                        const isDone = completedSets[`m-${exIdx}-${i}`];
-                        const diff = difficulty[`${exIdx}-${i}`];
+                        const isDone = completedSets["m-" + exIdx + "-" + i];
+                        const diff = difficulty[exIdx + "-" + i];
                         const diffOpt = DIFFICULTY_OPTIONS.find(d => d.key === diff);
-                        const isNextSet = !isDone && Array.from({ length: i }, (_, j) => completedSets[`m-${exIdx}-${j}`]).every(Boolean);
+                        const isNextSet = !isDone && Array.from({ length: i }, (_, j) => completedSets["m-" + exIdx + "-" + j]).every(Boolean);
                         return (
                           <div key={i} style={{ flex: 1 }}>
                             <button onClick={() => { if (!isDone) toggleSet("m", exIdx, i); }}
-                              style={{ width: "100%", aspectRatio: "1", borderRadius: 10, border: `2px solid ${isDone ? (diffOpt?.color || "#6de8a0") : isNextSet ? "#555" : "#2a2a2a"}`, background: isDone ? (diffOpt?.bg || "#1e3a2a") : "#111", color: isDone ? (diffOpt?.color || "#6de8a0") : isNextSet ? "#888" : "#444", fontSize: isDone ? 16 : 13, fontWeight: 700, cursor: isDone ? "default" : "pointer" }}>
-                              {isDone ? (diffOpt?.emoji || "✓") : i + 1}
+                              style={{ width: "100%", aspectRatio: "1", borderRadius: 10, border: "2px solid " + (isDone ? (diffOpt ? diffOpt.color : "#6de8a0") : isNextSet ? "#555" : "#2a2a2a"), background: isDone ? (diffOpt ? diffOpt.bg : "#1e3a2a") : "#111", color: isDone ? (diffOpt ? diffOpt.color : "#6de8a0") : isNextSet ? "#888" : "#444", fontSize: isDone ? 16 : 13, fontWeight: 700, cursor: isDone ? "default" : "pointer" }}>
+                              {isDone ? (diffOpt ? diffOpt.emoji : "✓") : i + 1}
                             </button>
                           </div>
                         );
                       })}
                     </div>
                     {Array.from({ length: ex.sets }, (_, i) => {
-                      const isDone = completedSets[`m-${exIdx}-${i}`];
-                      const hasDiff = difficulty[`${exIdx}-${i}`];
+                      const isDone = completedSets["m-" + exIdx + "-" + i];
+                      const hasDiff = difficulty[exIdx + "-" + i];
                       const isLastSet = i === ex.sets - 1;
                       if (!isDone || hasDiff) return null;
                       return (
                         <div key={i} style={{ marginTop: 10, background: "#161616", borderRadius: 10, padding: "12px", border: "1px solid #2a2a2a" }}>
                           <div style={{ fontSize: 12, color: "#888", marginBottom: 8, textAlign: "center" }}>
-                            {i + 1}세트 완료! {isLastSet ? "마지막 세트예요 👏" : "난이도는 어땠나요?"}
+                            {i + 1}세트 완료! {isLastSet ? "마지막 세트예요" : "난이도는?"}
                           </div>
                           <div style={{ display: "flex", gap: 6 }}>
                             {DIFFICULTY_OPTIONS.map(opt => (
                               <button key={opt.key}
-                                onClick={() => isLastSet ? setDifficulty(prev => ({ ...prev, [`${exIdx}-${i}`]: opt.key })) : startRest(exIdx, i, opt.seconds, opt.key)}
-                                style={{ flex: 1, padding: "8px 4px", background: opt.bg, border: `1px solid ${opt.color}33`, borderRadius: 8, color: opt.color, fontSize: 11, fontWeight: 600, cursor: "pointer", textAlign: "center", lineHeight: 1.4 }}>
+                                onClick={() => isLastSet ? setDifficulty(prev => Object.assign({}, prev, { [exIdx + "-" + i]: opt.key })) : startRest(exIdx, i, opt.seconds, opt.key)}
+                                style={{ flex: 1, padding: "8px 4px", background: opt.bg, border: "1px solid " + opt.color + "33", borderRadius: 8, color: opt.color, fontSize: 11, fontWeight: 600, cursor: "pointer", textAlign: "center", lineHeight: 1.4 }}>
                                 {opt.emoji}<br />{opt.label}{!isLastSet && <><br /><span style={{ fontSize: 10, opacity: 0.7 }}>{opt.seconds}초</span></>}
                               </button>
                             ))}
@@ -647,15 +640,15 @@ return (
                     })}
                     {restTimer && restTimer.exIdx === exIdx && (
                       <div style={{ marginTop: 10, background: "#111", borderRadius: 10, padding: "14px", border: "1px solid #2a2a2a", textAlign: "center" }}>
-                        <div style={{ fontSize: 11, color: "#666", marginBottom: 4 }}>⏱ 휴식 중...</div>
+                        <div style={{ fontSize: 11, color: "#666", marginBottom: 4 }}>휴식 중...</div>
                         <div style={{ fontSize: 36, fontWeight: 800, color: restTimer.remaining <= 10 ? "#e86d6d" : "#e8c96d", letterSpacing: 2, marginBottom: 8 }}>
                           {formatTime(restTimer.remaining)}
                         </div>
                         <div style={{ height: 4, background: "#222", borderRadius: 2, marginBottom: 10, overflow: "hidden" }}>
-                          <div style={{ height: "100%", width: `${(restTimer.remaining / restTimer.seconds) * 100}%`, background: restTimer.remaining <= 10 ? "#e86d6d" : "#e8c96d", borderRadius: 2, transition: "width 1s linear" }} />
+                          <div style={{ height: "100%", width: (restTimer.remaining / restTimer.seconds * 100) + "%", background: restTimer.remaining <= 10 ? "#e86d6d" : "#e8c96d", borderRadius: 2, transition: "width 1s linear" }} />
                         </div>
                         {restTimer.remaining === 0 ? (
-                          <div style={{ color: "#6de8a0", fontWeight: 700, fontSize: 14 }}>✓ 휴식 완료! 다음 세트 시작하세요</div>
+                          <div style={{ color: "#6de8a0", fontWeight: 700, fontSize: 14 }}>휴식 완료! 다음 세트 시작하세요</div>
                         ) : (
                           <button onClick={skipRest} style={{ padding: "7px 20px", background: "#1e1e1e", border: "1px solid #333", borderRadius: 8, color: "#666", fontSize: 12, cursor: "pointer" }}>건너뛰기</button>
                         )}
@@ -666,7 +659,7 @@ return (
               );
             })}
             <button onClick={finishSession} style={{ width: "100%", padding: "15px", background: "linear-gradient(135deg, #e8c96d, #d4a843)", border: "none", borderRadius: 12, fontSize: 15, fontWeight: 800, color: "#111", cursor: "pointer", marginTop: 8 }}>
-              운동 완료 & 저장
+              운동 완료 &amp; 저장
             </button>
             <button onClick={() => setSession(null)} style={{ width: "100%", padding: "12px", background: "none", border: "1px solid #2a2a2a", borderRadius: 12, fontSize: 14, color: "#555", cursor: "pointer", marginTop: 8 }}>
               취소
@@ -713,11 +706,11 @@ return (
           </button>
           {!resetConfirm ? (
             <button onClick={() => setResetConfirm(true)} style={{ width: "100%", padding: "13px", background: "none", border: "1px solid #3a2020", borderRadius: 12, color: "#e87a6d", fontSize: 14, cursor: "pointer" }}>
-              🗑 내 기록 초기화
+              내 기록 초기화
             </button>
           ) : (
             <div style={{ background: "#1e1010", borderRadius: 12, padding: 16, border: "1px solid #4a2020" }}>
-              <p style={{ color: "#e87a6d", fontSize: 14, margin: "0 0 12px", textAlign: "center" }}>⚠️ 모든 기록과 중량이 초기화됩니다.<br />정말 리셋할까요?</p>
+              <p style={{ color: "#e87a6d", fontSize: 14, margin: "0 0 12px", textAlign: "center" }}>모든 기록과 중량이 초기화됩니다. 정말 리셋할까요?</p>
               <div style={{ display: "flex", gap: 8 }}>
                 <button onClick={() => setResetConfirm(false)} style={{ flex: 1, padding: "11px", background: "#222", border: "1px solid #333", borderRadius: 10, color: "#aaa", fontSize: 14, cursor: "pointer" }}>취소</button>
                 <button onClick={handleReset} style={{ flex: 1, padding: "11px", background: "#3a1010", border: "1px solid #5a2020", borderRadius: 10, color: "#e87a6d", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>초기화</button>
@@ -732,12 +725,15 @@ return (
       <div>
         <h3 style={{ margin: "0 0 16px", fontSize: 16, color: "#888", fontWeight: 500 }}>바벨 원판 계산기</h3>
         <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
-          <label style={{ fontSize: 14, color: "#888", display: "block", marginBottom: 8 }}>목표 중량 (kg)</label>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <button onClick={() => setCalcWeight(Math.max(20, calcWeight - 5))} style={{ width: 40, height: 40, borderRadius: 10, background: "#222", border: "1px solid #444", color: "#f0ede8", fontSize: 20, cursor: "pointer" }}>−</button>
-            <input type="number" value={calcWeight} onChange={e => setCalcWeight(parseFloat(e.target.value) || 20)}
-              style={{ flex: 1, padding: "10px", background: "#111", border: "1px solid #333", borderRadius: 10, color: "#e8c96d", fontSize: 22, fontWeight: 800, textAlign: "center", outline: "none" }} />
-            <button onClick={() => setCalcWeight(calcWeight + 5)} style={{ width: 40, height: 40, borderRadius: 10, background: "#222", border: "1px solid #444", color: "#f0ede8", fontSize: 20, cursor: "pointer" }}>+</button>
+          <label style={{ fontSize: 14, color: "#888", display: "block", marginBottom: 12 }}>목표 중량</label>
+          <div style={{ textAlign: "center", fontSize: 40, fontWeight: 800, color: "#e8c96d", marginBottom: 16 }}>{calcWeight}kg</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8 }}>
+            {[-10, -5, 5, 10].map(delta => (
+              <button key={delta} onClick={() => setCalcWeight(w => Math.max(20, w + delta))}
+                style={{ padding: "12px 0", background: delta < 0 ? "#1e1e1e" : "#2e2a1a", border: "1px solid " + (delta < 0 ? "#333" : "#e8c96d44"), borderRadius: 10, color: delta < 0 ? "#aaa" : "#e8c96d", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+                {delta > 0 ? "+" : ""}{delta}
+              </button>
+            ))}
           </div>
         </div>
         <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a" }}>
@@ -753,7 +749,7 @@ return (
               {getPlateCombo(calcWeight).map(({ kg, count }) => (
                 <div key={kg} style={{ background: "#111", borderRadius: 10, padding: "8px 14px", border: "1px solid #2a2a2a", textAlign: "center" }}>
                   <div style={{ fontSize: 18, fontWeight: 800, color: "#e8c96d" }}>{kg}kg</div>
-                  <div style={{ fontSize: 12, color: "#555" }}>× {count}개</div>
+                  <div style={{ fontSize: 12, color: "#555" }}>x {count}개</div>
                 </div>
               ))}
             </div>
@@ -765,158 +761,98 @@ return (
       </div>
     )}
 
-{tab === 3 && (
-  <div>
-
-    {/* 5x5란? */}
-    <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
-      <h3 style={{ margin: "0 0 12px", fontSize: 18, color: "#e8c96d", fontWeight: 800 }}>StrongLifts 5x5란?</h3>
-      <p style={{ color: "#aaa", fontSize: 14, lineHeight: 1.8, margin: "0 0 12px" }}>
-        StrongLifts 5x5는 전 세계 수백만 명이 사용하는 검증된 근력 증가 프로그램이에요. 복잡한 운동 없이 5가지 핵심 복합 운동만으로 전신 근력을 균형 있게 키울 수 있어요.
-      </p>
-      <p style={{ color: "#aaa", fontSize: 14, lineHeight: 1.8, margin: "0 0 12px" }}>
-        핵심 원칙은 단순해요. 매 세션마다 5세트 5회씩 반복하고, 성공하면 다음 세션에 5kg씩 중량을 올려요. 이 점진적 과부하 방식이 근력 성장의 핵심이에요.
-      </p>
-      <p style={{ color: "#aaa", fontSize: 14, lineHeight: 1.8, margin: 0 }}>
-        주 3회 (월/수/금 또는 화/목/토) 운동하며, 초보자부터 중급자까지 누구에게나 효과적이에요.
-      </p>
-    </div>
-
-    {/* 프로그램 구성 */}
-    <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
-      <h3 style={{ margin: "0 0 16px", fontSize: 16, color: "#e8c96d", fontWeight: 800 }}>프로그램 구성</h3>
-      {[
-        { title: "워크아웃 A", color: "#6db8e8", exercises: [
-          { name: "하체 운동", detail: "불가리안 스플릿 스쿼트 3x8 또는 스쿼트 5x5" },
-          { name: "벤치프레스", detail: "5세트 x 5회 — 가슴, 어깨 앞쪽, 삼두" },
-          { name: "바벨 로우", detail: "5세트 x 5회 — 등, 이두, 코어" },
-        ]},
-        { title: "워크아웃 B", color: "#6de8a0", exercises: [
-          { name: "하체 운동", detail: "불가리안 스플릿 스쿼트 3x8 또는 스쿼트 5x5" },
-          { name: "오버헤드 프레스", detail: "5세트 x 5회 — 어깨, 삼두, 코어" },
-          { name: "데드리프트", detail: "1세트 x 5회 — 전신 후면 사슬 전체" },
-        ]},
-      ].map(w => (
-        <div key={w.title} style={{ marginBottom: 14, background: "#111", borderRadius: 10, padding: 14 }}>
-          <div style={{ fontWeight: 700, color: w.color, marginBottom: 10, fontSize: 15 }}>{w.title}</div>
-          {w.exercises.map(e => (
-            <div key={e.name} style={{ padding: "8px 0", borderBottom: "1px solid #1a1a1a" }}>
-              <div style={{ fontSize: 14, color: "#f0ede8", fontWeight: 600, marginBottom: 3 }}>{e.name}</div>
-              <div style={{ fontSize: 12, color: "#666" }}>{e.detail}</div>
+    {tab === 3 && (
+      <div>
+        <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
+          <h3 style={{ margin: "0 0 12px", fontSize: 18, color: "#e8c96d", fontWeight: 800 }}>StrongLifts 5x5란?</h3>
+          <p style={{ color: "#aaa", fontSize: 14, lineHeight: 1.8, margin: "0 0 12px" }}>StrongLifts 5x5는 전 세계 수백만 명이 사용하는 검증된 근력 증가 프로그램이에요. 복잡한 운동 없이 5가지 핵심 복합 운동만으로 전신 근력을 균형 있게 키울 수 있어요.</p>
+          <p style={{ color: "#aaa", fontSize: 14, lineHeight: 1.8, margin: "0 0 12px" }}>핵심 원칙은 단순해요. 매 세션마다 5세트 5회씩 반복하고, 성공하면 다음 세션에 5kg씩 중량을 올려요.</p>
+          <p style={{ color: "#aaa", fontSize: 14, lineHeight: 1.8, margin: 0 }}>주 3회 (월/수/금 또는 화/목/토) 운동하며, 초보자부터 중급자까지 누구에게나 효과적이에요.</p>
+        </div>
+        <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
+          <h3 style={{ margin: "0 0 16px", fontSize: 16, color: "#e8c96d", fontWeight: 800 }}>프로그램 구성</h3>
+          {[
+            { title: "워크아웃 A", color: "#6db8e8", exercises: ["하체 운동 (불가리안 or 스쿼트)", "벤치프레스 5x5", "바벨 로우 5x5"] },
+            { title: "워크아웃 B", color: "#6de8a0", exercises: ["하체 운동 (불가리안 or 스쿼트)", "오버헤드 프레스 5x5", "데드리프트 1x5"] },
+          ].map(w => (
+            <div key={w.title} style={{ marginBottom: 14, background: "#111", borderRadius: 10, padding: 14 }}>
+              <div style={{ fontWeight: 700, color: w.color, marginBottom: 8, fontSize: 15 }}>{w.title}</div>
+              {w.exercises.map(e => (
+                <div key={e} style={{ fontSize: 13, color: "#aaa", padding: "4px 0", borderBottom: "1px solid #1a1a1a" }}>{e}</div>
+              ))}
+            </div>
+          ))}
+          <p style={{ color: "#666", fontSize: 12, margin: "12px 0 0", lineHeight: 1.6 }}>A - B - A - B 순서로 번갈아 진행해요. 세션 사이에 하루 이상 휴식을 취하세요.</p>
+        </div>
+        <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
+          <h3 style={{ margin: "0 0 16px", fontSize: 16, color: "#e8c96d", fontWeight: 800 }}>중량 증가 원칙</h3>
+          {[
+            { color: "#6de8a0", bg: "#1a2e1a", title: "성공 시 (+5kg)", desc: "5세트를 모두 완료하면 다음 세션에 자동으로 5kg 증가해요." },
+            { color: "#e8c96d", bg: "#2e2a1a", title: "실패 시", desc: "3회 연속 실패하면 중량이 자동으로 10% 감량돼요. 중량 설정 변경에서 직접 내릴 수도 있어요." },
+            { color: "#e86d6d", bg: "#2e1a1a", title: "정체기가 오면?", desc: "수면, 식사, 스트레스를 점검해보세요. 단백질 섭취와 충분한 수면이 가장 효과적이에요." },
+          ].map(item => (
+            <div key={item.title} style={{ background: item.bg, borderRadius: 10, padding: 14, marginBottom: 10, border: "1px solid " + item.color + "33" }}>
+              <div style={{ fontWeight: 700, color: item.color, fontSize: 14, marginBottom: 6 }}>{item.title}</div>
+              <div style={{ color: "#aaa", fontSize: 13, lineHeight: 1.7 }}>{item.desc}</div>
             </div>
           ))}
         </div>
-      ))}
-      <div style={{ background: "#111", borderRadius: 10, padding: 14, marginTop: 4 }}>
-        <div style={{ fontSize: 13, color: "#888", lineHeight: 1.7 }}>
-          A - B - A - B 순서로 번갈아 진행해요.<br />
-          예시: 월요일 A, 수요일 B, 금요일 A, 다음주 월요일 B<br />
-          세션 사이에 최소 하루 이상 휴식을 취하세요.
+        <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
+          <h3 style={{ margin: "0 0 16px", fontSize: 16, color: "#e8c96d", fontWeight: 800 }}>앱 사용법</h3>
+          {[
+            { step: "1", title: "회원가입", desc: "아이디와 비밀번호(4자 이상)를 입력하고 회원가입하세요. 시작 중량도 설정할 수 있어요." },
+            { step: "2", title: "하체 운동 선택", desc: "불가리안 스플릿 스쿼트 또는 스쿼트 중 오늘 할 운동을 선택하세요." },
+            { step: "3", title: "웜업 세트", desc: "본 세트 전에 반드시 웜업을 완료하세요. 부상 예방에 매우 중요해요!" },
+            { step: "4", title: "본 세트 완료", desc: "세트 완료 후 난이도를 선택하면 자동으로 휴식 타이머가 시작돼요." },
+            { step: "5", title: "운동 저장", desc: "저장하면 성공한 운동은 다음 세션에 자동으로 5kg 올라가요." },
+            { step: "6", title: "기록 관리", desc: "기록 탭에서 현재 중량과 세션 기록 확인, 중량 설정 변경도 가능해요." },
+          ].map(item => (
+            <div key={item.step} style={{ display: "flex", gap: 14, padding: "14px 0", borderBottom: "1px solid #222" }}>
+              <div style={{ width: 30, height: 30, borderRadius: "50%", background: "#e8c96d22", border: "1px solid #e8c96d66", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: "#e8c96d", flexShrink: 0 }}>{item.step}</div>
+              <div>
+                <div style={{ fontWeight: 700, color: "#f0ede8", fontSize: 14, marginBottom: 5 }}>{item.title}</div>
+                <div style={{ color: "#888", fontSize: 13, lineHeight: 1.7 }}>{item.desc}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
+          <h3 style={{ margin: "0 0 16px", fontSize: 16, color: "#e8c96d", fontWeight: 800 }}>휴식 타이머</h3>
+          {[
+            { emoji: "😊", label: "적당했어요", time: "90초", color: "#6de8a0", desc: "짧은 휴식으로도 다음 세트 가능해요." },
+            { emoji: "😅", label: "힘들었어요", time: "3분", color: "#e8c96d", desc: "충분히 쉬고 다음 세트에 집중하세요." },
+            { emoji: "😤", label: "실패했어요", time: "5분", color: "#e86d6d", desc: "충분한 휴식 후 도전하세요." },
+          ].map(item => (
+            <div key={item.label} style={{ display: "flex", gap: 12, padding: "10px 0", borderBottom: "1px solid #222", alignItems: "center" }}>
+              <span style={{ fontSize: 24 }}>{item.emoji}</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                  <span style={{ fontWeight: 600, color: item.color, fontSize: 14 }}>{item.label}</span>
+                  <span style={{ fontSize: 13, color: item.color, fontWeight: 700 }}>{item.time}</span>
+                </div>
+                <div style={{ fontSize: 12, color: "#666", lineHeight: 1.5 }}>{item.desc}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{ background: "#1a2e1a", borderRadius: 14, padding: 20, border: "1px solid #2a4a2a", marginBottom: 16 }}>
+          <h3 style={{ margin: "0 0 14px", fontSize: 16, color: "#6de8a0", fontWeight: 800 }}>꿀팁</h3>
+          {[
+            { title: "웜업은 필수!", desc: "웜업 세트를 절대 건너뛰지 마세요." },
+            { title: "가볍게 시작하세요", desc: "처음엔 가벼운 중량으로 시작하고 꾸준히 올리는 게 효과적이에요." },
+            { title: "스쿼트 깊이", desc: "허벅지가 바닥과 평행이 될 때까지 내려가세요." },
+            { title: "불가리안 중량 입력", desc: "양손 합산 중량을 입력해요. 한 손에 10kg이면 20kg 입력!" },
+            { title: "데드리프트는 1세트", desc: "1세트만 하지만 가장 무거운 무게로 집중해서 해요." },
+            { title: "단백질과 수면", desc: "체중 1kg당 1.6-2g 단백질과 7-8시간 수면을 목표로 하세요." },
+          ].map((tip, i) => (
+            <div key={i} style={{ padding: "10px 0", borderBottom: i < 5 ? "1px solid #1a3a1a" : "none" }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#6de8a0", marginBottom: 3 }}>{tip.title}</div>
+              <div style={{ fontSize: 12, color: "#4a8a5a", lineHeight: 1.6 }}>{tip.desc}</div>
+            </div>
+          ))}
         </div>
       </div>
-    </div>
-
-    {/* 하체 운동 선택 */}
-    <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
-      <h3 style={{ margin: "0 0 16px", fontSize: 16, color: "#e8c96d", fontWeight: 800 }}>하체 운동 선택</h3>
-      <p style={{ color: "#aaa", fontSize: 13, lineHeight: 1.7, margin: "0 0 14px" }}>
-        매 운동 시작 전 하체 운동을 선택할 수 있어요. 두 운동을 번갈아 해도 좋고, 한 가지만 꾸준히 해도 좋아요.
-      </p>
-      {[
-        { name: "불가리안 스플릿 스쿼트", sets: "3세트 x 8회", pros: ["한쪽 다리씩 독립적으로 훈련 — 좌우 불균형 교정에 효과적", "무릎과 고관절 안정성 향상", "코어 균형 감각 발달", "중량은 양손 합산으로 입력 (한 손에 절반씩)"] },
-        { name: "스쿼트", sets: "5세트 x 5회", pros: ["전통적인 하체 근력 운동의 왕", "대퇴사두, 햄스트링, 둔근, 코어 동시 발달", "높은 중량으로 전신 호르몬 분비 촉진", "바벨을 어깨에 얹고 깊이 앉는 동작"] },
-      ].map(ex => (
-        <div key={ex.name} style={{ background: "#111", borderRadius: 10, padding: 14, marginBottom: 10 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-            <div style={{ fontWeight: 700, color: "#f0ede8", fontSize: 14 }}>{ex.name}</div>
-            <div style={{ fontSize: 12, color: "#e8c96d" }}>{ex.sets}</div>
-          </div>
-          {ex.pros.map((p, i) => (
-            <div key={i} style={{ fontSize: 12, color: "#888", padding: "3px 0", lineHeight: 1.6 }}>• {p}</div>
-          ))}
-        </div>
-      ))}
-    </div>
-
-    {/* 중량 증가 원칙 */}
-    <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
-      <h3 style={{ margin: "0 0 16px", fontSize: 16, color: "#e8c96d", fontWeight: 800 }}>중량 증가 원칙</h3>
-      {[
-        { color: "#6de8a0", bg: "#1a2e1a", title: "성공 시 (+5kg)", desc: "5세트를 모두 완료하면 다음 세션에 자동으로 5kg 증가해요. 모든 운동 동일하게 적용돼요." },
-        { color: "#e8c96d", bg: "#2e2a1a", title: "실패 시 (카운트 누적)", desc: "세트를 다 완료 못하면 실패 카운트가 올라가요. 3회 연속 실패하면 중량이 자동으로 10% 감량돼요. 너무 아프거나 힘들다면 스스로 중량 설정 변경에서 내릴 수 있어요." },
-        { color: "#e86d6d", bg: "#2e1a1a", title: "정체기가 오면?", desc: "중량이 잘 안 오를 땐 수면, 식사, 스트레스를 점검해보세요. 단백질 섭취를 늘리고 충분한 수면을 취하는 것이 가장 효과적이에요." },
-      ].map(item => (
-        <div key={item.title} style={{ background: item.bg, borderRadius: 10, padding: 14, marginBottom: 10, border: "1px solid " + item.color + "33" }}>
-          <div style={{ fontWeight: 700, color: item.color, fontSize: 14, marginBottom: 6 }}>{item.title}</div>
-          <div style={{ color: "#aaa", fontSize: 13, lineHeight: 1.7 }}>{item.desc}</div>
-        </div>
-      ))}
-    </div>
-
-    {/* 앱 사용법 */}
-    <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
-      <h3 style={{ margin: "0 0 16px", fontSize: 16, color: "#e8c96d", fontWeight: 800 }}>앱 사용법</h3>
-      {[
-        { step: "1", title: "회원가입", desc: "아이디와 비밀번호(4자 이상)를 입력하고 회원가입하세요. 다음 화면에서 각 운동의 시작 중량을 설정할 수 있어요. 첫 번째 가입자는 자동으로 관리자가 돼요." },
-        { step: "2", title: "하체 운동 선택", desc: "오늘 운동 탭에서 운동 예고를 확인한 후, 오늘 하고 싶은 하체 운동(불가리안 or 스쿼트)을 선택하면 운동 시작 버튼이 활성화돼요." },
-        { step: "3", title: "웜업 세트 완료", desc: "각 운동마다 웜업 세트가 자동으로 계산돼요. 본 세트 전에 반드시 웜업을 완료하세요. 부상 예방에 매우 중요해요!" },
-        { step: "4", title: "본 세트 & 난이도 평가", desc: "세트 버튼을 눌러 완료 체크를 해요. 완료 후 적당/힘듦/실패 중 난이도를 선택하면 자동으로 휴식 타이머가 시작돼요 (90초~5분)." },
-        { step: "5", title: "운동 완료 & 저장", desc: "모든 세트 완료 후 저장 버튼을 누르면 성공한 운동은 다음 세션에 자동으로 5kg 올라가요. 실패한 운동은 카운트가 누적돼요." },
-        { step: "6", title: "기록 & 중량 관리", desc: "기록 탭에서 현재 중량과 최근 10개 세션 기록을 확인할 수 있어요. 중량 설정 변경 버튼으로 언제든 각 운동 중량을 수동으로 조정할 수 있어요." },
-      ].map(item => (
-        <div key={item.step} style={{ display: "flex", gap: 14, padding: "14px 0", borderBottom: "1px solid #222" }}>
-          <div style={{ width: 30, height: 30, borderRadius: "50%", background: "#e8c96d22", border: "1px solid #e8c96d66", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: "#e8c96d", flexShrink: 0 }}>{item.step}</div>
-          <div>
-            <div style={{ fontWeight: 700, color: "#f0ede8", fontSize: 14, marginBottom: 5 }}>{item.title}</div>
-            <div style={{ color: "#888", fontSize: 13, lineHeight: 1.7 }}>{item.desc}</div>
-          </div>
-        </div>
-      ))}
-    </div>
-
-    {/* 휴식 타이머 */}
-    <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
-      <h3 style={{ margin: "0 0 16px", fontSize: 16, color: "#e8c96d", fontWeight: 800 }}>휴식 타이머 가이드</h3>
-      {[
-        { emoji: "😊", label: "적당했어요", time: "90초", color: "#6de8a0", desc: "가볍게 완료했을 때. 짧은 휴식으로도 다음 세트 가능해요." },
-        { emoji: "😅", label: "힘들었어요", time: "3분", color: "#e8c96d", desc: "보통 강도일 때. 충분히 쉬고 다음 세트에 집중하세요." },
-        { emoji: "😤", label: "실패했어요", time: "5분", color: "#e86d6d", desc: "세트를 완료 못했을 때. 충분한 휴식 후 도전하세요." },
-      ].map(item => (
-        <div key={item.label} style={{ display: "flex", gap: 12, padding: "10px 0", borderBottom: "1px solid #222", alignItems: "center" }}>
-          <span style={{ fontSize: 24 }}>{item.emoji}</span>
-          <div style={{ flex: 1 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-              <span style={{ fontWeight: 600, color: item.color, fontSize: 14 }}>{item.label}</span>
-              <span style={{ fontSize: 13, color: item.color, fontWeight: 700 }}>{item.time}</span>
-            </div>
-            <div style={{ fontSize: 12, color: "#666", lineHeight: 1.5 }}>{item.desc}</div>
-          </div>
-        </div>
-      ))}
-    </div>
-
-    {/* 꿀팁 */}
-    <div style={{ background: "#1a2e1a", borderRadius: 14, padding: 20, border: "1px solid #2a4a2a", marginBottom: 16 }}>
-      <h3 style={{ margin: "0 0 14px", fontSize: 16, color: "#6de8a0", fontWeight: 800 }}>꿀팁 모음</h3>
-      {[
-        { title: "웜업은 필수!", desc: "웜업 세트를 절대 건너뛰지 마세요. 특히 무거운 중량일수록 더 중요해요." },
-        { title: "가볍게 시작하세요", desc: "처음엔 가벼운 중량으로 시작하는 게 좋아요. 폼을 익히고 꾸준히 올리는 게 훨씬 효과적이에요." },
-        { title: "스쿼트 깊이", desc: "허벅지가 바닥과 평행이 될 때까지 내려가세요. 깊이가 얕으면 효과가 절반이에요." },
-        { title: "불가리안 중량 입력", desc: "불가리안 스플릿 스쿼트는 양손 합산 중량을 입력해요. 한 손에 10kg이면 20kg 입력!" },
-        { title: "데드리프트는 1세트", desc: "데드리프트는 1세트만 하지만 가장 무거운 무게로 최대한 집중해서 해요." },
-        { title: "단백질과 수면", desc: "운동만큼 중요한 게 회복이에요. 체중 1kg당 1.6~2g의 단백질 섭취와 7~8시간 수면을 목표로 하세요." },
-        { title: "정체기는 자연스러워요", desc: "중량이 안 오르는 시기가 반드시 와요. 3회 실패 후 자동 감량 후 다시 올라가는 게 정상 과정이에요." },
-      ].map((tip, i) => (
-        <div key={i} style={{ padding: "10px 0", borderBottom: i < 6 ? "1px solid #1a3a1a" : "none" }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: "#6de8a0", marginBottom: 3 }}>{tip.title}</div>
-          <div style={{ fontSize: 12, color: "#4a8a5a", lineHeight: 1.6 }}>{tip.desc}</div>
-        </div>
-      ))}
-    </div>
-
-  </div>
-)}
-
+    )}
   </div>
 </div>
 ```
