@@ -1,1 +1,22 @@
+name: Fix and Deploy
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Fix quotes
+        run: node fix-quotes.js
+      - name: Commit
+        run: |
+          git config user.email "action@github.com"
+          git config user.name "GitHub Action"
+          git add src/App.js
+          git diff --staged --quiet || git commit -m "fix"
+          git push
 
