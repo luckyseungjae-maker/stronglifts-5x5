@@ -1,50 +1,50 @@
-import { useState, useEffect } from “react”;
-import { db } from “./firebase”;
+import { useState, useEffect } from "react";
+import { db } from "./firebase";
 import {
 doc, getDoc, setDoc, deleteDoc, collection, getDocs
-} from “firebase/firestore”;
+} from "firebase/firestore";
 
 // \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 // \uc6b4\ub3d9 \ub370\uc774\ud130
 // \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 const WORKOUTS = {
 A: [
-{ name: “\ubd88\uac00\ub9ac\uc548 \uc2a4\ud50c\ub9bf \uc2a4\ucffc\ud2b8”, sets: 3, reps: 8, increment: 5, note: “\uc591\uc190 \ud569\uc0b0 \u00b7 \uac01 \ub2e4\ub9ac”, isBulgarian: true },
-{ name: “\ubca4\uce58\ud504\ub808\uc2a4”, sets: 5, reps: 5, increment: 10 },
-{ name: “\ubc14\ubca8 \ub85c\uc6b0”, sets: 5, reps: 5, increment: 10 },
+{ name: "\ubd88\uac00\ub9ac\uc548 \uc2a4\ud50c\ub9bf \uc2a4\ucffc\ud2b8", sets: 3, reps: 8, increment: 5, note: "\uc591\uc190 \ud569\uc0b0 \u00b7 \uac01 \ub2e4\ub9ac", isBulgarian: true },
+{ name: "\ubca4\uce58\ud504\ub808\uc2a4", sets: 5, reps: 5, increment: 10 },
+{ name: "\ubc14\ubca8 \ub85c\uc6b0", sets: 5, reps: 5, increment: 10 },
 ],
 B: [
-{ name: “\ubd88\uac00\ub9ac\uc548 \uc2a4\ud50c\ub9bf \uc2a4\ucffc\ud2b8”, sets: 3, reps: 8, increment: 5, note: “\uc591\uc190 \ud569\uc0b0 \u00b7 \uac01 \ub2e4\ub9ac”, isBulgarian: true },
-{ name: “\uc624\ubc84\ud5e4\ub4dc \ud504\ub808\uc2a4”, sets: 5, reps: 5, increment: 10 },
-{ name: “\ub370\ub4dc\ub9ac\ud504\ud2b8”, sets: 1, reps: 5, increment: 10 },
+{ name: "\ubd88\uac00\ub9ac\uc548 \uc2a4\ud50c\ub9bf \uc2a4\ucffc\ud2b8", sets: 3, reps: 8, increment: 5, note: "\uc591\uc190 \ud569\uc0b0 \u00b7 \uac01 \ub2e4\ub9ac", isBulgarian: true },
+{ name: "\uc624\ubc84\ud5e4\ub4dc \ud504\ub808\uc2a4", sets: 5, reps: 5, increment: 10 },
+{ name: "\ub370\ub4dc\ub9ac\ud504\ud2b8", sets: 1, reps: 5, increment: 10 },
 ],
 };
 
 const DEFAULT_WEIGHTS = {
-“\ubd88\uac00\ub9ac\uc548 \uc2a4\ud50c\ub9bf \uc2a4\ucffc\ud2b8”: 20,
+"\ubd88\uac00\ub9ac\uc548 \uc2a4\ud50c\ub9bf \uc2a4\ucffc\ud2b8": 20,
 \ubca4\uce58\ud504\ub808\uc2a4: 40,
-“\ubc14\ubca8 \ub85c\uc6b0”: 40,
-“\uc624\ubc84\ud5e4\ub4dc \ud504\ub808\uc2a4”: 20,
+"\ubc14\ubca8 \ub85c\uc6b0": 40,
+"\uc624\ubc84\ud5e4\ub4dc \ud504\ub808\uc2a4": 20,
 \ub370\ub4dc\ub9ac\ud504\ud2b8: 60,
 };
 
-const TABS = [”\uc624\ub298 \uc6b4\ub3d9”, “\uae30\ub85d”, “\uc911\ub7c9 \uacc4\uc0b0\uae30”];
+const TABS = ["\uc624\ub298 \uc6b4\ub3d9", "\uae30\ub85d", "\uc911\ub7c9 \uacc4\uc0b0\uae30"];
 
 const formatDate = (d) =>
-new Date(d).toLocaleDateString(“ko-KR”, { month: “short”, day: “numeric”, weekday: “short” });
+new Date(d).toLocaleDateString("ko-KR", { month: "short", day: "numeric", weekday: "short" });
 
 const getWarmupSets = (weight, isBulgarian) => {
 if (isBulgarian) {
 return [
-{ label: “\ub9e8\ubab8”, weight: 0, reps: 10 },
-{ label: “\uc6dc\uc5c5 1”, weight: Math.max(2, Math.round(weight * 0.25 / 2) * 2), reps: 8 },
-{ label: “\uc6dc\uc5c5 2”, weight: Math.max(4, Math.round(weight * 0.5 / 2) * 2), reps: 5 },
+{ label: "\ub9e8\ubab8", weight: 0, reps: 10 },
+{ label: "\uc6dc\uc5c5 1", weight: Math.max(2, Math.round(weight * 0.25 / 2) * 2), reps: 8 },
+{ label: "\uc6dc\uc5c5 2", weight: Math.max(4, Math.round(weight * 0.5 / 2) * 2), reps: 5 },
 ];
 }
 return [
-{ label: “\uc6dc\uc5c5 1”, weight: Math.max(20, Math.round(weight * 0.4 / 10) * 10), reps: 5 },
-{ label: “\uc6dc\uc5c5 2”, weight: Math.max(20, Math.round(weight * 0.6 / 10) * 10), reps: 3 },
-{ label: “\uc6dc\uc5c5 3”, weight: Math.max(20, Math.round(weight * 0.8 / 10) * 10), reps: 2 },
+{ label: "\uc6dc\uc5c5 1", weight: Math.max(20, Math.round(weight * 0.4 / 10) * 10), reps: 5 },
+{ label: "\uc6dc\uc5c5 2", weight: Math.max(20, Math.round(weight * 0.6 / 10) * 10), reps: 3 },
+{ label: "\uc6dc\uc5c5 3", weight: Math.max(20, Math.round(weight * 0.8 / 10) * 10), reps: 2 },
 ];
 };
 
@@ -54,22 +54,22 @@ return [
 
 // \uc720\uc800 \ub85c\uadf8\uc778 \ud655\uc778
 async function loginUser(uid, pw) {
-const ref = doc(db, “users”, uid);
+const ref = doc(db, "users", uid);
 const snap = await getDoc(ref);
-if (!snap.exists()) return { ok: false, error: “\uc874\uc7ac\ud558\uc9c0 \uc54a\ub294 \uc544\uc774\ub514\uc608\uc694.” };
-if (snap.data().pw !== pw) return { ok: false, error: “\ube44\ubc00\ubc88\ud638\uac00 \ud2c0\ub838\uc5b4\uc694.” };
+if (!snap.exists()) return { ok: false, error: "\uc874\uc7ac\ud558\uc9c0 \uc54a\ub294 \uc544\uc774\ub514\uc608\uc694." };
+if (snap.data().pw !== pw) return { ok: false, error: "\ube44\ubc00\ubc88\ud638\uac00 \ud2c0\ub838\uc5b4\uc694." };
 return { ok: true, isAdmin: snap.data().isAdmin || false };
 }
 
 // \uc720\uc800 \ud68c\uc6d0\uac00\uc785
 async function registerUser(uid, pw) {
-const ref = doc(db, “users”, uid);
+const ref = doc(db, "users", uid);
 const snap = await getDoc(ref);
-if (snap.exists()) return { ok: false, error: “\uc774\ubbf8 \uc0ac\uc6a9 \uc911\uc778 \uc544\uc774\ub514\uc608\uc694.” };
-if (pw.length < 4) return { ok: false, error: “\ube44\ubc00\ubc88\ud638\ub294 4\uc790 \uc774\uc0c1\uc774\uc5b4\uc57c \ud574\uc694.” };
+if (snap.exists()) return { ok: false, error: "\uc774\ubbf8 \uc0ac\uc6a9 \uc911\uc778 \uc544\uc774\ub514\uc608\uc694." };
+if (pw.length < 4) return { ok: false, error: "\ube44\ubc00\ubc88\ud638\ub294 4\uc790 \uc774\uc0c1\uc774\uc5b4\uc57c \ud574\uc694." };
 
 // \uccab \ubc88\uc9f8 \uc720\uc800\uba74 \uad00\ub9ac\uc790
-const allUsers = await getDocs(collection(db, “users”));
+const allUsers = await getDocs(collection(db, "users"));
 const isAdmin = allUsers.empty;
 
 await setDoc(ref, { pw, isAdmin });
@@ -78,25 +78,25 @@ return { ok: true, isAdmin };
 
 // \uc720\uc800 \ub370\uc774\ud130 \ubd88\ub7ec\uc624\uae30
 async function loadUserData(uid) {
-const ref = doc(db, “userData”, uid);
+const ref = doc(db, "userData", uid);
 const snap = await getDoc(ref);
 return snap.exists() ? snap.data() : null;
 }
 
 // \uc720\uc800 \ub370\uc774\ud130 \uc800\uc7a5
 async function saveUserData(uid, data) {
-await setDoc(doc(db, “userData”, uid), data);
+await setDoc(doc(db, "userData", uid), data);
 }
 
 // \uc720\uc800 \uc0ad\uc81c (\uad00\ub9ac\uc790\uc6a9)
 async function deleteUser(uid) {
-await deleteDoc(doc(db, “users”, uid));
-await deleteDoc(doc(db, “userData”, uid));
+await deleteDoc(doc(db, "users", uid));
+await deleteDoc(doc(db, "userData", uid));
 }
 
 // \uc804\uccb4 \uc720\uc800 \ubaa9\ub85d (\uad00\ub9ac\uc790\uc6a9)
 async function getAllUsers() {
-const snap = await getDocs(collection(db, “users”));
+const snap = await getDocs(collection(db, "users"));
 const result = {};
 snap.forEach(d => { result[d.id] = d.data(); });
 return result;
@@ -106,18 +106,18 @@ return result;
 // \ub85c\uadf8\uc778 \ud654\uba74
 // \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 function LoginScreen({ onLogin }) {
-const [id, setId] = useState(””);
-const [pw, setPw] = useState(””);
-const [mode, setMode] = useState(“login”);
-const [error, setError] = useState(””);
+const [id, setId] = useState("");
+const [pw, setPw] = useState("");
+const [mode, setMode] = useState("login");
+const [error, setError] = useState("");
 const [loading, setLoading] = useState(false);
 
 const handle = async () => {
-if (!id.trim() || !pw.trim()) { setError(”\uc544\uc774\ub514\uc640 \ube44\ubc00\ubc88\ud638\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694.”); return; }
+if (!id.trim() || !pw.trim()) { setError("\uc544\uc774\ub514\uc640 \ube44\ubc00\ubc88\ud638\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694."); return; }
 setLoading(true);
-setError(””);
+setError("");
 try {
-if (mode === “login”) {
+if (mode === "login") {
 const res = await loginUser(id.trim(), pw);
 if (!res.ok) { setError(res.error); return; }
 onLogin(id.trim(), res.isAdmin);
@@ -127,48 +127,48 @@ if (!res.ok) { setError(res.error); return; }
 onLogin(id.trim(), res.isAdmin);
 }
 } catch (e) {
-setError(”\uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc5b4\uc694. Firebase \uc124\uc815\uc744 \ud655\uc778\ud574\uc8fc\uc138\uc694.”);
+setError("\uc624\ub958\uac00 \ubc1c\uc0dd\ud588\uc5b4\uc694. Firebase \uc124\uc815\uc744 \ud655\uc778\ud574\uc8fc\uc138\uc694.");
 } finally {
 setLoading(false);
 }
 };
 
 return (
-<div style={{ minHeight: “100vh”, background: “#0f0f0f”, display: “flex”, alignItems: “center”, justifyContent: “center”, padding: 20 }}>
-<div style={{ width: “100%”, maxWidth: 400 }}>
-<div style={{ textAlign: “center”, marginBottom: 36 }}>
+<div style={{ minHeight: "100vh", background: "#0f0f0f", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+<div style={{ width: "100%", maxWidth: 400 }}>
+<div style={{ textAlign: "center", marginBottom: 36 }}>
 <div style={{ fontSize: 48, marginBottom: 8 }}>\u1f3cb\ufe0f</div>
-<h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: “#f0ede8” }}>StrongLifts 5\u00d75</h1>
-<p style={{ color: “#555”, fontSize: 13, marginTop: 6 }}>\ub098\ub9cc\uc758 \uc6b4\ub3d9 \uae30\ub85d\uc744 \uad00\ub9ac\ud558\uc138\uc694</p>
+<h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: "#f0ede8" }}>StrongLifts 5\u00d75</h1>
+<p style={{ color: "#555", fontSize: 13, marginTop: 6 }}>\ub098\ub9cc\uc758 \uc6b4\ub3d9 \uae30\ub85d\uc744 \uad00\ub9ac\ud558\uc138\uc694</p>
 </div>
-<div style={{ display: “flex”, background: “#1a1a1a”, borderRadius: 12, padding: 4, marginBottom: 24 }}>
-{[[“login”, “\ub85c\uadf8\uc778”], [“register”, “\ud68c\uc6d0\uac00\uc785”]].map(([v, label]) => (
-<button key={v} onClick={() => { setMode(v); setError(””); }}
-style={{ flex: 1, padding: “10px”, border: “none”, borderRadius: 9, background: mode === v ? “#e8c96d” : “none”, color: mode === v ? “#111” : “#555”, fontWeight: mode === v ? 700 : 400, fontSize: 14, cursor: “pointer”, transition: “all 0.2s” }}>
+<div style={{ display: "flex", background: "#1a1a1a", borderRadius: 12, padding: 4, marginBottom: 24 }}>
+{[["login", "\ub85c\uadf8\uc778"], ["register", "\ud68c\uc6d0\uac00\uc785"]].map(([v, label]) => (
+<button key={v} onClick={() => { setMode(v); setError(""); }}
+style={{ flex: 1, padding: "10px", border: "none", borderRadius: 9, background: mode === v ? "#e8c96d" : "none", color: mode === v ? "#111" : "#555", fontWeight: mode === v ? 700 : 400, fontSize: 14, cursor: "pointer", transition: "all 0.2s" }}>
 {label}
 </button>
 ))}
 </div>
-<div style={{ background: “#1a1a1a”, borderRadius: 16, padding: 24, border: “1px solid #2a2a2a” }}>
+<div style={{ background: "#1a1a1a", borderRadius: 16, padding: 24, border: "1px solid #2a2a2a" }}>
 <div style={{ marginBottom: 16 }}>
-<label style={{ fontSize: 13, color: “#888”, display: “block”, marginBottom: 6 }}>\uc544\uc774\ub514</label>
-<input value={id} onChange={e => setId(e.target.value)} onKeyDown={e => e.key === “Enter” && handle()} placeholder=”\uc544\uc774\ub514 \uc785\ub825”
-style={{ width: “100%”, padding: “12px 14px”, background: “#111”, border: “1px solid #333”, borderRadius: 10, color: “#f0ede8”, fontSize: 15, outline: “none”, boxSizing: “border-box” }} />
+<label style={{ fontSize: 13, color: "#888", display: "block", marginBottom: 6 }}>\uc544\uc774\ub514</label>
+<input value={id} onChange={e => setId(e.target.value)} onKeyDown={e => e.key === "Enter" && handle()} placeholder="\uc544\uc774\ub514 \uc785\ub825"
+style={{ width: "100%", padding: "12px 14px", background: "#111", border: "1px solid #333", borderRadius: 10, color: "#f0ede8", fontSize: 15, outline: "none", boxSizing: "border-box" }} />
 </div>
 <div style={{ marginBottom: 20 }}>
-<label style={{ fontSize: 13, color: “#888”, display: “block”, marginBottom: 6 }}>\ube44\ubc00\ubc88\ud638</label>
-<input type=“password” value={pw} onChange={e => setPw(e.target.value)} onKeyDown={e => e.key === “Enter” && handle()} placeholder=”\ube44\ubc00\ubc88\ud638 \uc785\ub825”
-style={{ width: “100%”, padding: “12px 14px”, background: “#111”, border: “1px solid #333”, borderRadius: 10, color: “#f0ede8”, fontSize: 15, outline: “none”, boxSizing: “border-box” }} />
+<label style={{ fontSize: 13, color: "#888", display: "block", marginBottom: 6 }}>\ube44\ubc00\ubc88\ud638</label>
+<input type="password" value={pw} onChange={e => setPw(e.target.value)} onKeyDown={e => e.key === "Enter" && handle()} placeholder="\ube44\ubc00\ubc88\ud638 \uc785\ub825"
+style={{ width: "100%", padding: "12px 14px", background: "#111", border: "1px solid #333", borderRadius: 10, color: "#f0ede8", fontSize: 15, outline: "none", boxSizing: "border-box" }} />
 </div>
 {error && (
-<div style={{ background: “#2e1a1a”, border: “1px solid #5a2020”, borderRadius: 8, padding: “10px 14px”, color: “#e87a6d”, fontSize: 13, marginBottom: 16 }}>{error}</div>
+<div style={{ background: "#2e1a1a", border: "1px solid #5a2020", borderRadius: 8, padding: "10px 14px", color: "#e87a6d", fontSize: 13, marginBottom: 16 }}>{error}</div>
 )}
 <button onClick={handle} disabled={loading}
-style={{ width: “100%”, padding: “14px”, background: loading ? “#555” : “linear-gradient(135deg, #e8c96d, #d4a843)”, border: “none”, borderRadius: 12, fontSize: 15, fontWeight: 800, color: “#111”, cursor: loading ? “default” : “pointer” }}>
-{loading ? “\ucc98\ub9ac \uc911…” : mode === “login” ? “\ub85c\uadf8\uc778” : “\ud68c\uc6d0\uac00\uc785”}
+style={{ width: "100%", padding: "14px", background: loading ? "#555" : "linear-gradient(135deg, #e8c96d, #d4a843)", border: "none", borderRadius: 12, fontSize: 15, fontWeight: 800, color: "#111", cursor: loading ? "default" : "pointer" }}>
+{loading ? "\ucc98\ub9ac \uc911..." : mode === "login" ? "\ub85c\uadf8\uc778" : "\ud68c\uc6d0\uac00\uc785"}
 </button>
 </div>
-<p style={{ textAlign: “center”, color: “#333”, fontSize: 12, marginTop: 20 }}>\uccab \ubc88\uc9f8 \uac00\uc785\uc790\ub294 \uc790\ub3d9\uc73c\ub85c \uad00\ub9ac\uc790\uac00 \ub429\ub2c8\ub2e4</p>
+<p style={{ textAlign: "center", color: "#333", fontSize: 12, marginTop: 20 }}>\uccab \ubc88\uc9f8 \uac00\uc785\uc790\ub294 \uc790\ub3d9\uc73c\ub85c \uad00\ub9ac\uc790\uac00 \ub429\ub2c8\ub2e4</p>
 </div>
 </div>
 );
@@ -186,38 +186,38 @@ useEffect(() => { getAllUsers().then(u => { setUsers(u); setLoading(false); }); 
 
 const handleDelete = async (uid) => {
 await deleteUser(uid);
-const updated = { …users };
+const updated = { ...users };
 delete updated[uid];
 setUsers(updated);
 setConfirm(null);
 };
 
 return (
-<div style={{ position: “fixed”, inset: 0, background: “#0f0f0f”, zIndex: 100, overflowY: “auto” }}>
-<div style={{ maxWidth: 480, margin: “0 auto”, padding: 20 }}>
-<div style={{ display: “flex”, justifyContent: “space-between”, alignItems: “center”, marginBottom: 24 }}>
-<h2 style={{ margin: 0, color: “#e8c96d”, fontSize: 18 }}>\u1f451 \uad00\ub9ac\uc790 \ud328\ub110</h2>
-<button onClick={onClose} style={{ background: “#222”, border: “1px solid #333”, borderRadius: 8, color: “#aaa”, padding: “6px 14px”, cursor: “pointer” }}>\ub2eb\uae30</button>
+<div style={{ position: "fixed", inset: 0, background: "#0f0f0f", zIndex: 100, overflowY: "auto" }}>
+<div style={{ maxWidth: 480, margin: "0 auto", padding: 20 }}>
+<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+<h2 style={{ margin: 0, color: "#e8c96d", fontSize: 18 }}>\u1f451 \uad00\ub9ac\uc790 \ud328\ub110</h2>
+<button onClick={onClose} style={{ background: "#222", border: "1px solid #333", borderRadius: 8, color: "#aaa", padding: "6px 14px", cursor: "pointer" }}>\ub2eb\uae30</button>
 </div>
-<div style={{ background: “#1a1a1a”, borderRadius: 14, border: “1px solid #2a2a2a”, overflow: “hidden” }}>
-<div style={{ padding: “12px 16px”, borderBottom: “1px solid #2a2a2a”, color: “#555”, fontSize: 13 }}>\uc804\uccb4 \uc720\uc800 ({Object.keys(users).length}\uba85)</div>
+<div style={{ background: "#1a1a1a", borderRadius: 14, border: "1px solid #2a2a2a", overflow: "hidden" }}>
+<div style={{ padding: "12px 16px", borderBottom: "1px solid #2a2a2a", color: "#555", fontSize: 13 }}>\uc804\uccb4 \uc720\uc800 ({Object.keys(users).length}\uba85)</div>
 {loading ? (
-<div style={{ padding: 20, textAlign: “center”, color: “#444” }}>\ubd88\ub7ec\uc624\ub294 \uc911…</div>
+<div style={{ padding: 20, textAlign: "center", color: "#444" }}>\ubd88\ub7ec\uc624\ub294 \uc911...</div>
 ) : Object.entries(users).map(([uid, info]) => (
-<div key={uid} style={{ display: “flex”, justifyContent: “space-between”, alignItems: “center”, padding: “14px 16px”, borderBottom: “1px solid #1e1e1e” }}>
+<div key={uid} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 16px", borderBottom: "1px solid #1e1e1e" }}>
 <div>
-<span style={{ fontWeight: 600, color: uid === currentUid ? “#e8c96d” : “#f0ede8” }}>{uid}</span>
-{info.isAdmin && <span style={{ marginLeft: 6, fontSize: 11, color: “#e8c96d”, background: “#2e2a1a”, padding: “2px 7px”, borderRadius: 20 }}>\uad00\ub9ac\uc790</span>}
-{uid === currentUid && <span style={{ marginLeft: 6, fontSize: 11, color: “#6db8e8” }}>\ub098</span>}
+<span style={{ fontWeight: 600, color: uid === currentUid ? "#e8c96d" : "#f0ede8" }}>{uid}</span>
+{info.isAdmin && <span style={{ marginLeft: 6, fontSize: 11, color: "#e8c96d", background: "#2e2a1a", padding: "2px 7px", borderRadius: 20 }}>\uad00\ub9ac\uc790</span>}
+{uid === currentUid && <span style={{ marginLeft: 6, fontSize: 11, color: "#6db8e8" }}>\ub098</span>}
 </div>
 {uid !== currentUid && !info.isAdmin && (
 confirm === uid ? (
-<div style={{ display: “flex”, gap: 6 }}>
-<button onClick={() => setConfirm(null)} style={{ padding: “5px 10px”, background: “#222”, border: “1px solid #333”, borderRadius: 6, color: “#aaa”, fontSize: 12, cursor: “pointer” }}>\ucde8\uc18c</button>
-<button onClick={() => handleDelete(uid)} style={{ padding: “5px 10px”, background: “#3a1010”, border: “1px solid #5a2020”, borderRadius: 6, color: “#e87a6d”, fontSize: 12, cursor: “pointer” }}>\uc0ad\uc81c</button>
+<div style={{ display: "flex", gap: 6 }}>
+<button onClick={() => setConfirm(null)} style={{ padding: "5px 10px", background: "#222", border: "1px solid #333", borderRadius: 6, color: "#aaa", fontSize: 12, cursor: "pointer" }}>\ucde8\uc18c</button>
+<button onClick={() => handleDelete(uid)} style={{ padding: "5px 10px", background: "#3a1010", border: "1px solid #5a2020", borderRadius: 6, color: "#e87a6d", fontSize: 12, cursor: "pointer" }}>\uc0ad\uc81c</button>
 </div>
 ) : (
-<button onClick={() => setConfirm(uid)} style={{ padding: “5px 12px”, background: “none”, border: “1px solid #3a2020”, borderRadius: 6, color: “#e87a6d”, fontSize: 12, cursor: “pointer” }}>\uc0ad\uc81c</button>
+<button onClick={() => setConfirm(uid)} style={{ padding: "5px 12px", background: "none", border: "1px solid #3a2020", borderRadius: 6, color: "#e87a6d", fontSize: 12, cursor: "pointer" }}>\uc0ad\uc81c</button>
 )
 )}
 </div>
@@ -233,9 +233,9 @@ confirm === uid ? (
 // \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 function WorkoutApp({ uid, isAdmin, onLogout }) {
 const [tab, setTab] = useState(0);
-const [weights, setWeights] = useState({ …DEFAULT_WEIGHTS });
+const [weights, setWeights] = useState({ ...DEFAULT_WEIGHTS });
 const [history, setHistory] = useState([]);
-const [nextWorkout, setNextWorkout] = useState(“A”);
+const [nextWorkout, setNextWorkout] = useState("A");
 const [failCounts, setFailCounts] = useState({});
 const [dataLoaded, setDataLoaded] = useState(false);
 const [session, setSession] = useState(null);
@@ -249,9 +249,9 @@ const [difficulty, setDifficulty] = useState({});
 const [showAdmin, setShowAdmin] = useState(false);
 
 const DIFFICULTY_OPTIONS = [
-{ key: “easy”, label: “\uc801\ub2f9\ud588\uc5b4\uc694”, seconds: 90, color: “#6de8a0”, bg: “#1a2e1a”, emoji: “\u1f60a” },
-{ key: “hard”, label: “\ud798\ub4e4\uc5c8\uc5b4\uc694”, seconds: 180, color: “#e8c96d”, bg: “#2e2a1a”, emoji: “\u1f605” },
-{ key: “fail”, label: “\uc2e4\ud328\ud588\uc5b4\uc694”, seconds: 300, color: “#e86d6d”, bg: “#2e1a1a”, emoji: “\u1f624” },
+{ key: "easy", label: "\uc801\ub2f9\ud588\uc5b4\uc694", seconds: 90, color: "#6de8a0", bg: "#1a2e1a", emoji: "\u1f60a" },
+{ key: "hard", label: "\ud798\ub4e4\uc5c8\uc5b4\uc694", seconds: 180, color: "#e8c96d", bg: "#2e2a1a", emoji: "\u1f605" },
+{ key: "fail", label: "\uc2e4\ud328\ud588\uc5b4\uc694", seconds: 300, color: "#e86d6d", bg: "#2e1a1a", emoji: "\u1f624" },
 ];
 
 // Firebase\uc5d0\uc11c \uc720\uc800 \ub370\uc774\ud130 \ub85c\ub4dc
@@ -276,19 +276,19 @@ saveUserData(uid, { weights, history, next: nextWorkout, fails: failCounts });
 // \ud734\uc2dd \ud0c0\uc774\uba38
 useEffect(() => {
 if (!restTimer || restTimer.remaining <= 0) return;
-const id = setTimeout(() => setRestTimer(prev => prev ? { …prev, remaining: prev.remaining - 1 } : null), 1000);
+const id = setTimeout(() => setRestTimer(prev => prev ? { ...prev, remaining: prev.remaining - 1 } : null), 1000);
 return () => clearTimeout(id);
 }, [restTimer]);
 
 const startRest = (exIdx, setIdx, seconds, diffKey) => {
-setDifficulty(prev => ({ …prev, [`${exIdx}-${setIdx}`]: diffKey }));
+setDifficulty(prev => ({ ...prev, [`${exIdx}-${setIdx}`]: diffKey }));
 setRestTimer({ seconds, remaining: seconds, exIdx, setIdx });
 };
 const skipRest = () => setRestTimer(null);
 const formatTime = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
 const handleReset = async () => {
-const fresh = { weights: { …DEFAULT_WEIGHTS }, history: [], next: “A”, fails: {} };
+const fresh = { weights: { ...DEFAULT_WEIGHTS }, history: [], next: "A", fails: {} };
 setWeights(fresh.weights);
 setHistory(fresh.history);
 setNextWorkout(fresh.next);
@@ -299,7 +299,7 @@ await saveUserData(uid, fresh);
 };
 
 const startSession = () => {
-const exercises = WORKOUTS[nextWorkout].map(e => ({ …e, weight: weights[e.name] || DEFAULT_WEIGHTS[e.name] }));
+const exercises = WORKOUTS[nextWorkout].map(e => ({ ...e, weight: weights[e.name] || DEFAULT_WEIGHTS[e.name] }));
 const initialWarmup = {};
 exercises.forEach((_, i) => { initialWarmup[i] = true; });
 setSession({ type: nextWorkout, exercises, date: Date.now() });
@@ -310,7 +310,7 @@ setDone(false);
 
 const toggleSet = (prefix, exIdx, setIdx) => {
 const key = `${prefix}-${exIdx}-${setIdx}`;
-setCompletedSets(prev => ({ …prev, [key]: !prev[key] }));
+setCompletedSets(prev => ({ ...prev, [key]: !prev[key] }));
 };
 
 const isWarmupAllDone = (exIdx, count) =>
@@ -321,8 +321,8 @@ Array.from({ length: totalSets }, (_, i) => completedSets[`m-${exIdx}-${i}`]).ev
 
 const finishSession = () => {
 if (!session) return;
-const newWeights = { …weights };
-const newFails = { …failCounts };
+const newWeights = { ...weights };
+const newFails = { ...failCounts };
 const results = session.exercises.map((ex, i) => {
 const success = isMainAllDone(i, ex.sets);
 if (success) {
@@ -339,8 +339,8 @@ return { name: ex.name, weight: ex.weight, success };
 });
 setWeights(newWeights);
 setFailCounts(newFails);
-setHistory(prev => [{ type: session.type, date: session.date, results }, …prev.slice(0, 49)]);
-setNextWorkout(nextWorkout === “A” ? “B” : “A”);
+setHistory(prev => [{ type: session.type, date: session.date, results }, ...prev.slice(0, 49)]);
+setNextWorkout(nextWorkout === "A" ? "B" : "A");
 setDone(true);
 };
 
@@ -367,14 +367,14 @@ return s;
 
 if (!dataLoaded) {
 return (
-<div style={{ minHeight: “100vh”, background: “#0f0f0f”, display: “flex”, alignItems: “center”, justifyContent: “center”, color: “#555” }}>
-\ub370\uc774\ud130 \ubd88\ub7ec\uc624\ub294 \uc911…
+<div style={{ minHeight: "100vh", background: "#0f0f0f", display: "flex", alignItems: "center", justifyContent: "center", color: "#555" }}>
+\ub370\uc774\ud130 \ubd88\ub7ec\uc624\ub294 \uc911...
 </div>
 );
 }
 
 return (
-<div style={{ minHeight: “100vh”, background: “#0f0f0f”, color: “#f0ede8”, fontFamily: “‘Noto Sans KR’, sans-serif”, maxWidth: 480, margin: “0 auto”, paddingBottom: 80 }}>
+<div style={{ minHeight: "100vh", background: "#0f0f0f", color: "#f0ede8", fontFamily: "'Noto Sans KR', sans-serif", maxWidth: 480, margin: "0 auto", paddingBottom: 80 }}>
 {showAdmin && <AdminPanel currentUid={uid} onClose={() => setShowAdmin(false)} />}
 
 ```
