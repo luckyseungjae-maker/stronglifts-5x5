@@ -592,6 +592,7 @@ return (
                             </div>
                           );
                         })}
+                        <div style={{ fontSize: 11, color: "#555", marginTop: 8, paddingTop: 8, borderTop: "1px solid #1a1a1a", textAlign: "center" }}>웜업 세트 사이에는 휴식 없이 바로 진행하세요</div>
                       </div>
                     )}
                   </div>
