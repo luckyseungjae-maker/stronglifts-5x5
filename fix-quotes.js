@@ -7,4 +7,6 @@ c = c.split(String.fromCharCode(8216)).join(String.fromCharCode(39));
 c = c.split(String.fromCharCode(8217)).join(String.fromCharCode(39));
 c = c.split(String.fromCharCode(8230)).join(`...`);
 fs.writeFileSync(p, c, `utf8`);
+c = c.split(String.fromCharCode(96)+String.fromCharCode(96)+String.fromCharCode(96)).join(String.fromCharCode(96)+String.fromCharCode(96)+String.fromCharCode(96));
+
 console.log(`Done!`);
