@@ -717,6 +717,79 @@ return (
         </div>
       </div>
     )}
+
+{tab === 3 && (
+  <div>
+    <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
+      <h3 style={{ margin: "0 0 12px", fontSize: 18, color: "#e8c96d", fontWeight: 800 }}>StrongLifts 5x5란?</h3>
+      <p style={{ color: "#aaa", fontSize: 14, lineHeight: 1.7, margin: "0 0 12px" }}>StrongLifts 5x5는 가장 검증된 근력 증가 프로그램 중 하나예요. 5가지 핵심 복합 운동을 중심으로, 매 세션마다 중량을 조금씩 늘려가는 방식이에요.</p>
+      <p style={{ color: "#aaa", fontSize: 14, lineHeight: 1.7, margin: 0 }}>초보자부터 중급자까지 효과적이며, 주 3회 운동으로 전신 근력을 균형 있게 발달시킬 수 있어요.</p>
+    </div>
+    <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
+      <h3 style={{ margin: "0 0 16px", fontSize: 16, color: "#e8c96d", fontWeight: 800 }}>프로그램 구성</h3>
+      {[
+        { title: "워크아웃 A", exercises: ["하체 운동 (불가리안 or 스쿼트)", "벤치프레스 5x5", "바벨 로우 5x5"] },
+        { title: "워크아웃 B", exercises: ["하체 운동 (불가리안 or 스쿼트)", "오버헤드 프레스 5x5", "데드리프트 1x5"] },
+      ].map(w => (
+        <div key={w.title} style={{ marginBottom: 14, background: "#111", borderRadius: 10, padding: 14 }}>
+          <div style={{ fontWeight: 700, color: "#e8c96d", marginBottom: 8 }}>{w.title}</div>
+          {w.exercises.map(e => (
+            <div key={e} style={{ fontSize: 13, color: "#aaa", padding: "4px 0", borderBottom: "1px solid #1a1a1a" }}>{e}</div>
+          ))}
+        </div>
+      ))}
+      <p style={{ color: "#666", fontSize: 12, margin: "12px 0 0", lineHeight: 1.6 }}>A - B - A - B 순서로 번갈아 진행해요. 세션 사이에 하루 이상 휴식을 취하세요.</p>
+    </div>
+    <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
+      <h3 style={{ margin: "0 0 16px", fontSize: 16, color: "#e8c96d", fontWeight: 800 }}>중량 증가 원칙</h3>
+      {[
+        { icon: "V", title: "성공 시", desc: "다음 세션에 자동으로 중량이 올라가요 (하체 +5kg, 상체 +10kg)" },
+        { icon: "X", title: "실패 시", desc: "실패 횟수가 쌓여요. 3회 연속 실패하면 중량이 10% 감량돼요." },
+        { icon: "T", title: "휴식 시간", desc: "세트 완료 후 난이도에 따라 90초~5분 휴식을 취하세요." },
+      ].map(item => (
+        <div key={item.title} style={{ display: "flex", gap: 12, padding: "10px 0", borderBottom: "1px solid #222" }}>
+          <div style={{ fontSize: 14, fontWeight: 800, color: "#e8c96d", width: 20 }}>{item.icon}</div>
+          <div>
+            <div style={{ fontWeight: 600, color: "#f0ede8", fontSize: 14, marginBottom: 4 }}>{item.title}</div>
+            <div style={{ color: "#888", fontSize: 13, lineHeight: 1.5 }}>{item.desc}</div>
+          </div>
+        </div>
+      ))}
+    </div>
+    <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
+      <h3 style={{ margin: "0 0 16px", fontSize: 16, color: "#e8c96d", fontWeight: 800 }}>앱 사용법</h3>
+      {[
+        { step: "1", title: "회원가입", desc: "아이디와 비밀번호를 설정하고, 각 운동의 시작 중량을 입력하세요." },
+        { step: "2", title: "하체 운동 선택", desc: "운동 시작 전 불가리안 스플릿 스쿼트 또는 스쿼트 중 선택하세요." },
+        { step: "3", title: "웜업 세트", desc: "본 세트 전에 웜업 세트를 완료하세요. 부상 예방에 매우 중요해요!" },
+        { step: "4", title: "본 세트 완료", desc: "각 세트 완료 후 난이도를 선택하면 자동으로 휴식 타이머가 시작돼요." },
+        { step: "5", title: "운동 저장", desc: "모든 세트 완료 후 저장을 눌러요. 성공한 운동은 다음 세션에 중량이 올라가요." },
+        { step: "6", title: "기록 확인", desc: "기록 탭에서 현재 중량과 지난 세션 기록을 확인하세요." },
+      ].map(item => (
+        <div key={item.step} style={{ display: "flex", gap: 12, padding: "12px 0", borderBottom: "1px solid #222" }}>
+          <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#e8c96d22", border: "1px solid #e8c96d44", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 800, color: "#e8c96d", flexShrink: 0 }}>{item.step}</div>
+          <div>
+            <div style={{ fontWeight: 600, color: "#f0ede8", fontSize: 14, marginBottom: 4 }}>{item.title}</div>
+            <div style={{ color: "#888", fontSize: 13, lineHeight: 1.5 }}>{item.desc}</div>
+          </div>
+        </div>
+      ))}
+    </div>
+    <div style={{ background: "#1a2e1a", borderRadius: 14, padding: 20, border: "1px solid #2a4a2a", marginBottom: 16 }}>
+      <h3 style={{ margin: "0 0 12px", fontSize: 16, color: "#6de8a0", fontWeight: 800 }}>꿀팁</h3>
+      {[
+        "웜업은 절대 건너뛰지 마세요. 부상의 주요 원인이에요.",
+        "중량이 무겁게 느껴지면 더 가볍게 시작하세요. 꾸준함이 핵심이에요.",
+        "스쿼트는 깊이가 중요해요. 허벅지가 바닥과 평행이 될 때까지 내려가세요.",
+        "불가리안 스플릿 스쿼트는 양손 합산 중량을 입력해요.",
+        "데드리프트는 1세트만 하지만 가장 무거운 무게로 진행해요.",
+      ].map((tip, i) => (
+        <div key={i} style={{ fontSize: 13, color: "#6de8a0", padding: "6px 0", borderBottom: i < 4 ? "1px solid #1a3a1a" : "none", lineHeight: 1.5 }}>{tip}</div>
+      ))}
+    </div>
+  </div>
+)}
+
   </div>
 </div>
 ```
