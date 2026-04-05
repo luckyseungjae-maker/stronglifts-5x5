@@ -12,7 +12,7 @@ return (
 <p style={{ color: “#555”, fontSize: 13, marginTop: 8 }}>최종 업데이트: 2025년 4월</p>
 </div>
 
-```
+
   {[
     {
       title: "1. 수집하는 개인정보",
