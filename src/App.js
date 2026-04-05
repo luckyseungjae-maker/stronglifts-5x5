@@ -955,9 +955,19 @@ return (
 );
 }
 
+import LandingPage from “./LandingPage”;
+import PrivacyPolicy from “./PrivacyPolicy”;
+
 export default function App() {
 const [user, setUser] = useState(null);
-return !user
-? <LoginScreen onLogin={(uid, isAdmin) => setUser({ uid, isAdmin })} />
-: <WorkoutApp uid={user.uid} isAdmin={user.isAdmin} onLogout={() => setUser(null)} />;
+const [page, setPage] = useState(“landing”);
+
+if (page === “privacy”) return <PrivacyPolicy />;
+if (page === “login”) return (
+<LoginScreen onLogin={(uid, isAdmin) => { setUser({ uid, isAdmin }); setPage(“app”); }} />
+);
+if (page === “app” && user) return (
+<WorkoutApp uid={user.uid} isAdmin={user.isAdmin} onLogout={() => { setUser(null); setPage(“landing”); }} />
+);
+return <LandingPage onStart={() => setPage(“login”)} />;
 }
