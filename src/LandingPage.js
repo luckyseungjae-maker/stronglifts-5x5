@@ -1,4 +1,4 @@
-import React from “react”;
+im
 
 export default function LandingPage({ onStart }) {
 return (
