@@ -2,11 +2,11 @@ export default function LandingPage({ onStart }) {
 return (
 <div style={{ minHeight: “100vh”, background: “#0f0f0f”, color: “#f0ede8”, fontFamily: “sans-serif”, maxWidth: 480, margin: “0 auto”, boxSizing: “border-box” }}>
 
-
+```
   <div style={{ background: "linear-gradient(135deg, #1a1a1a 0%, #111 100%)", padding: "60px 24px 48px", textAlign: "center", borderBottom: "1px solid #222" }}>
     <div style={{ fontSize: 64, marginBottom: 16 }}>🏋️</div>
     <h1 style={{ margin: "0 0 12px", fontSize: 32, fontWeight: 900, color: "#f0ede8", lineHeight: 1.2 }}>
-      StrongLifts 5x5
+      SetUp
     </h1>
     <p style={{ margin: "0 0 8px", fontSize: 16, color: "#e8c96d", fontWeight: 600 }}>
       가장 단순하고 검증된 근력 프로그램
@@ -23,7 +23,7 @@ return (
   </div>
 
   <div style={{ padding: "40px 20px" }}>
-    <h2 style={{ margin: "0 0 24px", fontSize: 18, fontWeight: 800, color: "#f0ede8", textAlign: "center" }}>왜 StrongLifts 5x5인가요?</h2>
+    <h2 style={{ margin: "0 0 24px", fontSize: 18, fontWeight: 800, color: "#f0ede8", textAlign: "center" }}>왜 SetUp인가요?</h2>
     {[
       { emoji: "📈", title: "검증된 효과", desc: "전 세계 수백만 명이 사용한 근력 증가 프로그램이에요. 매 세션마다 중량이 자동으로 올라가요." },
       { emoji: "⚡", title: "단순한 구성", desc: "5가지 운동만 기억하면 돼요. 복잡한 루틴 없이 주 3회 운동으로 최대 효과를 낼 수 있어요." },
@@ -88,10 +88,8 @@ return (
   </div>
 
   <div style={{ borderTop: "1px solid #1a1a1a", padding: "24px 20px", textAlign: "center" }}>
-    <p style={{ margin: "0 0 8px", fontSize: 12, color: "#333" }}>© 2025 StrongLifts 5x5 · 정승재</p>
-    <p style={{ margin: 0, fontSize: 12, color: "#333" }}>
-      문의: luckyseungjae@naver.com
-    </p>
+    <p style={{ margin: "0 0 8px", fontSize: 12, color: "#333" }}>© 2025 SetUp · 정승재</p>
+    <p style={{ margin: 0, fontSize: 12, color: "#333" }}>문의: luckyseungjae@naver.com</p>
   </div>
 </div>
 ```
