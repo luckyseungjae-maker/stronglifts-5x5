@@ -398,7 +398,7 @@ return (
 <div style={{ width: “100%”, maxWidth: 400 }}>
 <div style={{ textAlign: “center”, marginBottom: 36 }}>
 <div style={{ fontSize: 48, marginBottom: 8 }}>🏋️</div>
-<h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: “#f0ede8” }}>StrongLifts 5x5</h1>
+<h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: “#f0ede8” }}>SetUp</h1>
 <p style={{ color: “#555”, fontSize: 13, marginTop: 6 }}>나만의 운동 기록을 관리하세요</p>
 </div>
 <div style={{ display: “flex”, background: “#1a1a1a”, borderRadius: 12, padding: 4, marginBottom: 24 }}>
@@ -667,7 +667,7 @@ return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <span style={{ fontSize: 28 }}>🏋️</span>
-        <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: "#f0ede8" }}>StrongLifts 5x5</h1>
+        <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: "#f0ede8" }}>SetUp</h1>
       </div>
       <div style={{ display: "flex", gap: 6 }}>
         {isAdmin && <button onClick={() => setShowAdmin(true)} style={{ padding: "6px 10px", background: "#2e2a1a", border: "1px solid #e8c96d44", borderRadius: 8, color: "#e8c96d", fontSize: 11, cursor: "pointer" }}>관리</button>}
@@ -1024,106 +1024,134 @@ return (
 
     {tab === 3 && (
       <div>
-        <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
-          <h3 style={{ margin: "0 0 12px", fontSize: 18, color: "#e8c96d", fontWeight: 800 }}>StrongLifts 5x5란?</h3>
-          <p style={{ color: "#aaa", fontSize: 14, lineHeight: 1.8, margin: "0 0 12px" }}>StrongLifts 5x5는 전 세계 수백만 명이 사용하는 검증된 근력 증가 프로그램이에요. 복잡한 운동 없이 5가지 핵심 복합 운동만으로 전신 근력을 균형 있게 키울 수 있어요.</p>
-          <p style={{ color: "#aaa", fontSize: 14, lineHeight: 1.8, margin: "0 0 12px" }}>핵심 원칙은 단순해요. 매 세션마다 5세트 5회씩 반복하고, 성공하면 다음 세션에 5kg씩 중량을 올려요.</p>
-          <p style={{ color: "#aaa", fontSize: 14, lineHeight: 1.8, margin: 0 }}>주 3회 (월/수/금 또는 화/목/토) 운동하며, 초보자부터 중급자까지 누구에게나 효과적이에요.</p>
-        </div>
-        <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
-          <h3 style={{ margin: "0 0 16px", fontSize: 16, color: "#e8c96d", fontWeight: 800 }}>운동별 자세 설명</h3>
-          {Object.keys(EXERCISE_DESC).map(name => (
-            <div key={name} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0", borderBottom: "1px solid #222" }}>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: EXERCISE_COLORS[name] || "#f0ede8" }}>{name}</div>
-                <div style={{ fontSize: 11, color: "#555", marginTop: 2 }}>{EXERCISE_DESC[name].target}</div>
+        <div style={{ background: "linear-gradient(135deg, #1e1a10, #1a1a1a)", borderRadius: 14, padding: 20, border: "1px solid #e8c96d22", marginBottom: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+            <span style={{ fontSize: 28 }}>🏋️</span>
+            <h3 style={{ margin: 0, fontSize: 20, fontWeight: 900, color: "#e8c96d" }}>SetUp</h3>
+          </div>
+          <p style={{ color: "#bbb", fontSize: 14, lineHeight: 1.8, margin: "0 0 10px" }}>
+            SetUp은 근력 운동을 처음 시작하거나 체계적으로 기록하고 싶은 분들을 위한 앱이에요.
+          </p>
+          <p style={{ color: "#bbb", fontSize: 14, lineHeight: 1.8, margin: 0 }}>
+            복잡한 루틴 없이 <span style={{ color: "#e8c96d", fontWeight: 700 }}>6가지 핵심 운동</span>만으로 전신 근력을 균형 있게 키울 수 있어요. 성공하면 자동으로 중량이 올라가고, 실패하면 자동으로 조정돼요.
+          </p>
+          <div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap" }}>
+            {[{ emoji: "📈", text: "자동 중량 증가" }, { emoji: "⏱️", text: "휴식 타이머" }, { emoji: "📊", text: "성장 그래프" }, { emoji: "🧮", text: "원판 계산기" }].map((f, i) => (
+              <div key={i} style={{ background: "#111", borderRadius: 8, padding: "6px 10px", display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontSize: 14 }}>{f.emoji}</span>
+                <span style={{ fontSize: 11, color: "#888" }}>{f.text}</span>
               </div>
-              <button onClick={() => setDescExercise(name)}
-                style={{ padding: "6px 14px", background: "#222", border: "1px solid #333", borderRadius: 8, color: "#aaa", fontSize: 12, cursor: "pointer" }}>
-                자세 보기
-              </button>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
+          <h3 style={{ margin: "0 0 14px", fontSize: 16, color: "#e8c96d", fontWeight: 800 }}>이런 분께 추천해요</h3>
+          {[
+            { emoji: "🌱", text: "헬스를 처음 시작하는 분" },
+            { emoji: "📝", text: "운동 기록을 체계적으로 관리하고 싶은 분" },
+            { emoji: "💪", text: "꾸준히 중량을 올려가며 성장하고 싶은 분" },
+            { emoji: "⏰", text: "주 3회, 1시간 이내로 효율적으로 운동하고 싶은 분" },
+          ].map((item, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: i < 3 ? "1px solid #222" : "none" }}>
+              <span style={{ fontSize: 20 }}>{item.emoji}</span>
+              <span style={{ fontSize: 13, color: "#aaa" }}>{item.text}</span>
             </div>
           ))}
         </div>
+
         <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
-          <h3 style={{ margin: "0 0 16px", fontSize: 16, color: "#e8c96d", fontWeight: 800 }}>프로그램 구성</h3>
+          <h3 style={{ margin: "0 0 6px", fontSize: 16, color: "#e8c96d", fontWeight: 800 }}>운동 구성</h3>
+          <p style={{ color: "#555", fontSize: 12, margin: "0 0 14px" }}>A, B 워크아웃을 번갈아 진행해요 · 주 3회</p>
+          <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
+            {[
+              { title: "워크아웃 A", color: "#6db8e8", exercises: ["하체 운동", "벤치프레스 5x5", "바벨 로우 5x5"] },
+              { title: "워크아웃 B", color: "#6de8a0", exercises: ["하체 운동", "오버헤드 프레스 5x5", "데드리프트 1x5"] },
+            ].map(w => (
+              <div key={w.title} style={{ flex: 1, background: "#111", borderRadius: 10, padding: 14 }}>
+                <div style={{ fontWeight: 700, color: w.color, marginBottom: 10, fontSize: 13 }}>{w.title}</div>
+                {w.exercises.map(e => (
+                  <div key={e} style={{ fontSize: 12, color: "#777", padding: "5px 0", borderBottom: "1px solid #1a1a1a" }}>{e}</div>
+                ))}
+              </div>
+            ))}
+          </div>
+          <div style={{ background: "#111", borderRadius: 10, padding: 12 }}>
+            <div style={{ fontSize: 12, color: "#555", marginBottom: 8 }}>하체 운동은 매일 선택해요</div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <div style={{ flex: 1, background: "#1a1a1a", borderRadius: 8, padding: "8px 12px", textAlign: "center" }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#6de8a0" }}>불가리안 스플릿 스쿼트</div>
+                <div style={{ fontSize: 10, color: "#555", marginTop: 3 }}>3세트 x 8회 (단다리)</div>
+              </div>
+              <div style={{ flex: 1, background: "#1a1a1a", borderRadius: 8, padding: "8px 12px", textAlign: "center" }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "#6db8e8" }}>스쿼트</div>
+                <div style={{ fontSize: 10, color: "#555", marginTop: 3 }}>5세트 x 5회</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
+          <h3 style={{ margin: "0 0 6px", fontSize: 16, color: "#e8c96d", fontWeight: 800 }}>운동별 가이드</h3>
+          <p style={{ color: "#555", fontSize: 12, margin: "0 0 14px" }}>핵심 포인트를 확인하고 자세히 버튼으로 상세 설명을 봐요</p>
           {[
-            { title: "워크아웃 A", color: "#6db8e8", exercises: ["하체 운동 (불가리안 or 스쿼트)", "벤치프레스 5x5", "바벨 로우 5x5"] },
-            { title: "워크아웃 B", color: "#6de8a0", exercises: ["하체 운동 (불가리안 or 스쿼트)", "오버헤드 프레스 5x5", "데드리프트 1x5"] },
-          ].map(w => (
-            <div key={w.title} style={{ marginBottom: 14, background: "#111", borderRadius: 10, padding: 14 }}>
-              <div style={{ fontWeight: 700, color: w.color, marginBottom: 8, fontSize: 15 }}>{w.title}</div>
-              {w.exercises.map(e => (
-                <div key={e} style={{ fontSize: 13, color: "#aaa", padding: "4px 0", borderBottom: "1px solid #1a1a1a" }}>{e}</div>
-              ))}
+            { name: "벤치프레스", emoji: "🏋️", point: "바를 가슴 중앙으로 내리고, 팔꿈치 45~75도 유지", target: "가슴 · 삼두 · 전면 어깨" },
+            { name: "스쿼트", emoji: "🦵", point: "허벅지가 바닥과 평행될 때까지, 무릎은 발끝 방향으로", target: "대퇴사두 · 둔근 · 햄스트링" },
+            { name: "불가리안 스플릿 스쿼트", emoji: "🦵", point: "앞 무릎 90도까지 수직으로, 앞발 뒤꿈치로 밀어내기", target: "대퇴사두 · 둔근 (단다리 집중)" },
+            { name: "바벨 로우", emoji: "💪", point: "상체 45~90도 숙이고, 배꼽 쪽으로 끌어당기기", target: "광배근 · 승모근 · 이두" },
+            { name: "오버헤드 프레스", emoji: "🙌", point: "코어와 둔근 조이고, 바를 수직으로 머리 위로", target: "전면/측면 어깨 · 삼두" },
+            { name: "데드리프트", emoji: "⬆️", point: "척추 중립 유지, 바를 몸에 붙여서 올리기 (1세트만)", target: "허리 · 둔근 · 햄스트링 · 전신" },
+          ].map((ex, i) => (
+            <div key={ex.name} style={{ padding: "14px 0", borderBottom: i < 5 ? "1px solid #222" : "none" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                    <span style={{ fontSize: 16 }}>{ex.emoji}</span>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: EXERCISE_COLORS[ex.name] || "#f0ede8" }}>{ex.name}</span>
+                  </div>
+                  <div style={{ fontSize: 11, color: "#555", marginBottom: 5 }}>{ex.target}</div>
+                  <div style={{ fontSize: 12, color: "#888", lineHeight: 1.6 }}>👉 {ex.point}</div>
+                </div>
+                <button onClick={() => setDescExercise(ex.name)}
+                  style={{ marginLeft: 10, padding: "5px 10px", background: "#222", border: "1px solid #333", borderRadius: 6, color: "#888", fontSize: 10, cursor: "pointer", flexShrink: 0 }}>
+                  자세히
+                </button>
+              </div>
             </div>
           ))}
-          <p style={{ color: "#666", fontSize: 12, margin: "12px 0 0", lineHeight: 1.6 }}>A - B - A - B 순서로 번갈아 진행해요. 세션 사이에 하루 이상 휴식을 취하세요.</p>
         </div>
+
         <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
-          <h3 style={{ margin: "0 0 16px", fontSize: 16, color: "#e8c96d", fontWeight: 800 }}>중량 증가 원칙</h3>
+          <h3 style={{ margin: "0 0 14px", fontSize: 16, color: "#e8c96d", fontWeight: 800 }}>중량 시스템</h3>
           {[
-            { color: "#6de8a0", bg: "#1a2e1a", title: "성공 시 (+5kg)", desc: "5세트를 모두 완료하면 다음 세션에 자동으로 5kg 증가해요." },
-            { color: "#e8c96d", bg: "#2e2a1a", title: "실패 시", desc: "3회 연속 실패하면 중량이 자동으로 10% 감량돼요. 중량 설정 변경에서 직접 내릴 수도 있어요." },
-            { color: "#e86d6d", bg: "#2e1a1a", title: "정체기가 오면?", desc: "수면, 식사, 스트레스를 점검해보세요. 단백질 섭취와 충분한 수면이 가장 효과적이에요." },
+            { color: "#6de8a0", bg: "#1a2e1a", emoji: "✅", title: "성공하면", desc: "다음 세션에 자동으로 5kg 올라가요." },
+            { color: "#e8c96d", bg: "#2e2a1a", emoji: "⚠️", title: "3회 연속 실패하면", desc: "중량이 자동으로 10% 내려가요. 기록 탭에서 직접 조정도 가능해요." },
+            { color: "#e86d6d", bg: "#2e1a1a", emoji: "😴", title: "정체기가 오면", desc: "수면과 단백질 섭취를 점검해보세요. 체중 1kg당 1.6~2g 단백질, 7~8시간 수면이 목표예요." },
           ].map(item => (
             <div key={item.title} style={{ background: item.bg, borderRadius: 10, padding: 14, marginBottom: 10, border: "1px solid " + item.color + "33" }}>
-              <div style={{ fontWeight: 700, color: item.color, fontSize: 14, marginBottom: 6 }}>{item.title}</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                <span style={{ fontSize: 16 }}>{item.emoji}</span>
+                <span style={{ fontWeight: 700, color: item.color, fontSize: 14 }}>{item.title}</span>
+              </div>
               <div style={{ color: "#aaa", fontSize: 13, lineHeight: 1.7 }}>{item.desc}</div>
             </div>
           ))}
         </div>
-        <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
-          <h3 style={{ margin: "0 0 16px", fontSize: 16, color: "#e8c96d", fontWeight: 800 }}>앱 사용법</h3>
-          {[
-            { step: "1", title: "회원가입", desc: "아이디, 이메일, 비밀번호(6자 이상)를 입력하고 회원가입하세요. 이메일은 비밀번호 찾기에 사용돼요." },
-            { step: "2", title: "하체 운동 선택", desc: "불가리안 스플릿 스쿼트 또는 스쿼트 중 오늘 할 운동을 선택하세요. 잘못 선택했으면 뒤로가기 버튼을 누르세요." },
-            { step: "3", title: "웜업 세트", desc: "본 세트 전에 반드시 웜업을 완료하세요. 부상 예방에 매우 중요해요!" },
-            { step: "4", title: "본 세트 완료", desc: "세트 완료 후 난이도를 선택하면 자동으로 휴식 타이머가 시작돼요." },
-            { step: "5", title: "운동 저장", desc: "저장하면 성공한 운동은 다음 세션에 자동으로 5kg 올라가요." },
-            { step: "6", title: "기록 관리", desc: "기록 탭에서 현재 중량과 세션 기록 확인, 중량 설정 변경도 가능해요." },
-          ].map(item => (
-            <div key={item.step} style={{ display: "flex", gap: 14, padding: "14px 0", borderBottom: "1px solid #222" }}>
-              <div style={{ width: 30, height: 30, borderRadius: "50%", background: "#e8c96d22", border: "1px solid #e8c96d66", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 800, color: "#e8c96d", flexShrink: 0 }}>{item.step}</div>
-              <div>
-                <div style={{ fontWeight: 700, color: "#f0ede8", fontSize: 14, marginBottom: 5 }}>{item.title}</div>
-                <div style={{ color: "#888", fontSize: 13, lineHeight: 1.7 }}>{item.desc}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-        <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
-          <h3 style={{ margin: "0 0 16px", fontSize: 16, color: "#e8c96d", fontWeight: 800 }}>휴식 타이머</h3>
-          {[
-            { emoji: "😊", label: "적당했어요", time: "90초", color: "#6de8a0", desc: "짧은 휴식으로도 다음 세트 가능해요." },
-            { emoji: "😅", label: "힘들었어요", time: "3분", color: "#e8c96d", desc: "충분히 쉬고 다음 세트에 집중하세요." },
-            { emoji: "😤", label: "실패했어요", time: "5분", color: "#e86d6d", desc: "충분한 휴식 후 도전하세요." },
-          ].map(item => (
-            <div key={item.label} style={{ display: "flex", gap: 12, padding: "10px 0", borderBottom: "1px solid #222", alignItems: "center" }}>
-              <span style={{ fontSize: 24 }}>{item.emoji}</span>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-                  <span style={{ fontWeight: 600, color: item.color, fontSize: 14 }}>{item.label}</span>
-                  <span style={{ fontSize: 13, color: item.color, fontWeight: 700 }}>{item.time}</span>
-                </div>
-                <div style={{ fontSize: 12, color: "#666", lineHeight: 1.5 }}>{item.desc}</div>
-              </div>
-            </div>
-          ))}
-        </div>
+
         <div style={{ background: "#1a2e1a", borderRadius: 14, padding: 20, border: "1px solid #2a4a2a", marginBottom: 16 }}>
-          <h3 style={{ margin: "0 0 14px", fontSize: 16, color: "#6de8a0", fontWeight: 800 }}>꿀팁</h3>
+          <h3 style={{ margin: "0 0 14px", fontSize: 16, color: "#6de8a0", fontWeight: 800 }}>꼭 기억하세요</h3>
           {[
-            { title: "웜업은 필수!", desc: "웜업 세트를 절대 건너뛰지 마세요." },
-            { title: "가볍게 시작하세요", desc: "처음엔 가벼운 중량으로 시작하고 꾸준히 올리는 게 효과적이에요." },
-            { title: "스쿼트 깊이", desc: "허벅지가 바닥과 평행이 될 때까지 내려가세요." },
-            { title: "불가리안 중량 입력", desc: "양손 합산 중량을 입력해요. 한 손에 10kg이면 20kg 입력!" },
-            { title: "데드리프트는 1세트", desc: "1세트만 하지만 가장 무거운 무게로 집중해서 해요." },
-            { title: "단백질과 수면", desc: "체중 1kg당 1.6-2g 단백질과 7-8시간 수면을 목표로 하세요." },
+            { emoji: "🔥", title: "웜업은 필수", desc: "부상 방지를 위해 웜업 세트를 절대 건너뛰지 마세요." },
+            { emoji: "😤", title: "가볍게 시작", desc: "처음엔 무조건 가벼운 중량으로 시작해요. 꾸준히 올리는 게 답이에요." },
+            { emoji: "🥩", title: "단백질 + 수면", desc: "체중 1kg당 1.6~2g 단백질, 7~8시간 수면을 지켜주세요." },
+            { emoji: "📌", title: "불가리안 중량 입력 주의", desc: "양손 합산 중량을 입력해요. 한 손에 10kg이면 20kg으로 입력!" },
           ].map((tip, i) => (
-            <div key={i} style={{ padding: "10px 0", borderBottom: i < 5 ? "1px solid #1a3a1a" : "none" }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: "#6de8a0", marginBottom: 3 }}>{tip.title}</div>
-              <div style={{ fontSize: 12, color: "#4a8a5a", lineHeight: 1.6 }}>{tip.desc}</div>
+            <div key={i} style={{ display: "flex", gap: 12, padding: "10px 0", borderBottom: i < 3 ? "1px solid #1a3a1a" : "none" }}>
+              <span style={{ fontSize: 20 }}>{tip.emoji}</span>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#6de8a0", marginBottom: 3 }}>{tip.title}</div>
+                <div style={{ fontSize: 12, color: "#4a8a5a", lineHeight: 1.6 }}>{tip.desc}</div>
+              </div>
             </div>
           ))}
         </div>
