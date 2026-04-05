@@ -1,4 +1,4 @@
-im
+
 
 export default function LandingPage({ onStart }) {
 return (
