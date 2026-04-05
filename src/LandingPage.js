@@ -4,7 +4,7 @@ export default function LandingPage({ onStart }) {
 return (
 <div style={{ minHeight: “100vh”, background: “#0f0f0f”, color: “#f0ede8”, fontFamily: “sans-serif”, maxWidth: 480, margin: “0 auto”, boxSizing: “border-box” }}>
 
-``
+
   {/* 히어로 섹션 */}
   <div style={{ background: "linear-gradient(135deg, #1a1a1a 0%, #111 100%)", padding: "60px 24px 48px", textAlign: "center", borderBottom: "1px solid #222" }}>
     <div style={{ fontSize: 64, marginBottom: 16 }}>🏋️</div>
