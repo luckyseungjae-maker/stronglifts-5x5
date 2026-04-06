@@ -794,7 +794,7 @@ return (
 <div style={{ width: 22, height: 22, borderRadius: "50%", background: "#e8c96d22", border: "1px solid #e8c96d44", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: "#e8c96d" }}>{uid[0].toUpperCase()}</div>
 <span style={{ fontSize: 12, color: "#888" }}>{uid}</span>
 {isAdmin && <span style={{ fontSize: 10, color: "#e8c96d", background: "#2e2a1a", padding: "1px 6px", borderRadius: 20 }}>관리자</span>}
-<span style={{ fontSize: 10, color: "#444", marginLeft: 2 }}>✎</span>
+<span style={{ fontSize: 14, color: "#666", marginLeft: 4 }}>✎</span>
 </button>
 <div style={{ display: "flex", gap: 16 }}>
 {[{ label: "총 세션", val: totalSessions }, { label: "연속", val: streak + "회" }, { label: "다음", val: nextWorkout }].map(s => (
