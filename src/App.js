@@ -1,7 +1,7 @@
 import { useState, useEffect } from “react”;
 import { db, auth } from “./firebase”;
-import { doc, getDoc, setDoc, deleteDoc, collection, getDocs } from “firebase/firestore”;
-import { createUserWithEmailAndPassword, sendPasswordResetEmail } from “firebase/auth”;
+import { doc, getDoc, setDoc, deleteDoc, collection, getDocs, updateDoc, arrayUnion } from “firebase/firestore”;
+import { createUserWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from “firebase/auth”;
 
 const EXERCISE_DESC = {
 “벤치프레스”: {
@@ -115,6 +115,9 @@ new Date(d).toLocaleDateString(“ko-KR”, { month: “short”, day: “numeri
 const formatDateShort = (d) =>
 new Date(d).toLocaleDateString(“ko-KR”, { month: “numeric”, day: “numeric” });
 
+const formatDateTime = (d) =>
+new Date(d).toLocaleString(“ko-KR”, { month: “short”, day: “numeric”, hour: “2-digit”, minute: “2-digit” });
+
 const getWarmupSets = (weight, isBulgarian) => {
 if (isBulgarian) {
 return [
@@ -135,26 +138,27 @@ const desc = EXERCISE_DESC[name];
 if (!desc) return null;
 const color = EXERCISE_COLORS[name] || “#e8c96d”;
 return (
-<div style={{ position: “fixed”, inset: 0, background: “rgba(0,0,0,0.85)”, zIndex: 200, display: “flex”, alignItems: “flex-end” }}>
-<div style={{ background: “#1a1a1a”, borderRadius: “20px 20px 0 0”, padding: 24, width: “100%”, maxWidth: 480, margin: “0 auto”, maxHeight: “80vh”, overflowY: “auto” }}>
-<div style={{ display: “flex”, justifyContent: “space-between”, alignItems: “center”, marginBottom: 16 }}>
+
+<div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 200, display: "flex", alignItems: "flex-end" }}>
+<div style={{ background: "#1a1a1a", borderRadius: "20px 20px 0 0", padding: 24, width: "100%", maxWidth: 480, margin: "0 auto", maxHeight: "80vh", overflowY: "auto" }}>
+<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
 <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: color }}>{name}</h2>
-<button onClick={onClose} style={{ background: “#222”, border: “1px solid #333”, borderRadius: 8, color: “#aaa”, padding: “6px 14px”, cursor: “pointer”, fontSize: 13 }}>닫기</button>
+<button onClick={onClose} style={{ background: "#222", border: "1px solid #333", borderRadius: 8, color: "#aaa", padding: "6px 14px", cursor: "pointer", fontSize: 13 }}>닫기</button>
 </div>
-<div style={{ background: “#111”, borderRadius: 10, padding: “8px 14px”, marginBottom: 16 }}>
-<span style={{ fontSize: 12, color: “#666” }}>주요 자극 근육: </span>
+<div style={{ background: "#111", borderRadius: 10, padding: "8px 14px", marginBottom: 16 }}>
+<span style={{ fontSize: 12, color: "#666" }}>주요 자극 근육: </span>
 <span style={{ fontSize: 12, color: color, fontWeight: 700 }}>{desc.target}</span>
 </div>
-<h3 style={{ margin: “0 0 10px”, fontSize: 14, color: “#f0ede8”, fontWeight: 700 }}>자세 포인트</h3>
+<h3 style={{ margin: "0 0 10px", fontSize: 14, color: "#f0ede8", fontWeight: 700 }}>자세 포인트</h3>
 {desc.points.map((p, i) => (
-<div key={i} style={{ display: “flex”, gap: 10, padding: “8px 0”, borderBottom: “1px solid #222” }}>
-<div style={{ width: 22, height: 22, borderRadius: “50%”, background: color + “22”, border: “1px solid “ + color + “44”, display: “flex”, alignItems: “center”, justifyContent: “center”, fontSize: 11, fontWeight: 800, color: color, flexShrink: 0 }}>{i + 1}</div>
-<span style={{ fontSize: 13, color: “#aaa”, lineHeight: 1.7 }}>{p}</span>
+<div key={i} style={{ display: "flex", gap: 10, padding: "8px 0", borderBottom: "1px solid #222" }}>
+<div style={{ width: 22, height: 22, borderRadius: "50%", background: color + "22", border: "1px solid " + color + "44", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: color, flexShrink: 0 }}>{i + 1}</div>
+<span style={{ fontSize: 13, color: "#aaa", lineHeight: 1.7 }}>{p}</span>
 </div>
 ))}
-<div style={{ background: “#2e1a1a”, border: “1px solid #5a2020”, borderRadius: 10, padding: 14, marginTop: 16 }}>
-<span style={{ fontSize: 12, color: “#e87a6d”, fontWeight: 700 }}>주의사항: </span>
-<span style={{ fontSize: 12, color: “#aaa”, lineHeight: 1.7 }}>{desc.caution}</span>
+<div style={{ background: "#2e1a1a", border: "1px solid #5a2020", borderRadius: 10, padding: 14, marginTop: 16 }}>
+<span style={{ fontSize: 12, color: "#e87a6d", fontWeight: 700 }}>주의사항: </span>
+<span style={{ fontSize: 12, color: "#aaa", lineHeight: 1.7 }}>{desc.caution}</span>
 </div>
 </div>
 </div>
@@ -169,13 +173,14 @@ const result = h.results.find(r => r.name === exerciseName);
 if (result) data.push({ date: h.date, weight: result.weight, success: result.success });
 }
 if (data.length < 2) return (
-<div style={{ textAlign: “center”, color: “#444”, fontSize: 13, padding: “20px 0” }}>
+
+<div style={{ textAlign: "center", color: "#444", fontSize: 13, padding: "20px 0" }}>
 기록이 2개 이상 쌓이면 그래프가 표시돼요
 </div>
 );
 const weights = data.map(d => d.weight);
-const minW = Math.min(…weights) - 5;
-const maxW = Math.max(…weights) + 5;
+const minW = Math.min(...weights) - 5;
+const maxW = Math.max(...weights) + 5;
 const range = maxW - minW || 1;
 const W = 300, H = 120;
 const pad = { l: 36, r: 10, t: 10, b: 24 };
@@ -183,25 +188,25 @@ const gw = W - pad.l - pad.r;
 const gh = H - pad.t - pad.b;
 const px = (i) => pad.l + (i / (data.length - 1)) * gw;
 const py = (w) => pad.t + gh - ((w - minW) / range) * gh;
-const pathD = data.map((d, i) => (i === 0 ? “M” : “L”) + px(i).toFixed(1) + “,” + py(d.weight).toFixed(1)).join(” “);
-const color = EXERCISE_COLORS[exerciseName] || “#e8c96d”;
+const pathD = data.map((d, i) => (i === 0 ? "M" : "L") + px(i).toFixed(1) + "," + py(d.weight).toFixed(1)).join(" ");
+const color = EXERCISE_COLORS[exerciseName] || "#e8c96d";
 const yTicks = [minW + 5, minW + Math.round(range / 2), maxW - 5].filter((v, i, a) => a.indexOf(v) === i);
 const xTicks = data.length <= 6 ? data.map((_, i) => i) : [0, Math.floor((data.length - 1) / 2), data.length - 1];
 return (
-<svg width=“100%” viewBox={“0 0 “ + W + “ “ + H} style={{ display: “block” }}>
+<svg width="100%" viewBox={"0 0 " + W + " " + H} style={{ display: "block" }}>
 {yTicks.map(v => (
 <g key={v}>
-<line x1={pad.l} y1={py(v).toFixed(1)} x2={W - pad.r} y2={py(v).toFixed(1)} stroke=”#1e1e1e” strokeWidth=“1” />
-<text x={pad.l - 4} y={py(v) + 4} textAnchor=“end” fill=”#444” fontSize=“9”>{v}</text>
+<line x1={pad.l} y1={py(v).toFixed(1)} x2={W - pad.r} y2={py(v).toFixed(1)} stroke="#1e1e1e" strokeWidth="1" />
+<text x={pad.l - 4} y={py(v) + 4} textAnchor="end" fill="#444" fontSize="9">{v}</text>
 </g>
 ))}
 <path d={pathD} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" />
-<path d={pathD + “ L” + px(data.length - 1).toFixed(1) + “,” + (H - pad.b) + “ L” + pad.l + “,” + (H - pad.b) + “ Z”} fill={color} fillOpacity=“0.08” />
+<path d={pathD + " L" + px(data.length - 1).toFixed(1) + "," + (H - pad.b) + " L" + pad.l + "," + (H - pad.b) + " Z"} fill={color} fillOpacity="0.08" />
 {data.map((d, i) => (
-<circle key={i} cx={px(i).toFixed(1)} cy={py(d.weight).toFixed(1)} r=“3” fill={d.success ? color : “#e86d6d”} stroke=”#0f0f0f” strokeWidth=“1.5” />
+<circle key={i} cx={px(i).toFixed(1)} cy={py(d.weight).toFixed(1)} r="3" fill={d.success ? color : "#e86d6d"} stroke="#0f0f0f" strokeWidth="1.5" />
 ))}
 {xTicks.map(i => (
-<text key={i} x={px(i).toFixed(1)} y={H - pad.b + 14} textAnchor=“middle” fill=”#444” fontSize=“9”>{formatDateShort(data[i].date)}</text>
+<text key={i} x={px(i).toFixed(1)} y={H - pad.b + 14} textAnchor="middle" fill="#444" fontSize="9">{formatDateShort(data[i].date)}</text>
 ))}
 </svg>
 );
@@ -212,6 +217,10 @@ const ref = doc(db, “users”, uid);
 const snap = await getDoc(ref);
 if (!snap.exists()) return { ok: false, error: “존재하지 않는 아이디예요.” };
 if (snap.data().pw !== pw) return { ok: false, error: “비밀번호가 틀렸어요.” };
+// 로그인 기록 저장
+await updateDoc(ref, {
+loginHistory: arrayUnion({ time: Date.now(), device: navigator.userAgent.includes(“Mobile”) ? “모바일” : “PC” })
+});
 return { ok: true, isAdmin: snap.data().isAdmin || false };
 }
 
@@ -230,7 +239,7 @@ return { ok: false, error: “회원가입 오류: “ + e.message };
 }
 const allUsers = await getDocs(collection(db, “users”));
 const isAdmin = allUsers.empty;
-await setDoc(ref, { pw, email, isAdmin });
+await setDoc(ref, { pw, email, isAdmin, loginHistory: [{ time: Date.now(), device: navigator.userAgent.includes(“Mobile”) ? “모바일” : “PC” }] });
 if (initialWeights) {
 await setDoc(doc(db, “userData”, uid), { weights: initialWeights, history: [], next: “A”, fails: {} });
 }
@@ -324,36 +333,37 @@ setResetSent(true);
 };
 
 if (step === “reset”) return (
-<div style={{ minHeight: “100vh”, background: “#0f0f0f”, display: “flex”, alignItems: “center”, justifyContent: “center”, padding: 20 }}>
-<div style={{ width: “100%”, maxWidth: 400 }}>
-<div style={{ textAlign: “center”, marginBottom: 32 }}>
+
+<div style={{ minHeight: "100vh", background: "#0f0f0f", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+<div style={{ width: "100%", maxWidth: 400 }}>
+<div style={{ textAlign: "center", marginBottom: 32 }}>
 <div style={{ fontSize: 40, marginBottom: 8 }}>🔑</div>
-<h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: “#f0ede8” }}>비밀번호 찾기</h2>
-<p style={{ color: “#555”, fontSize: 13, marginTop: 6 }}>가입 시 사용한 이메일로 재설정 링크를 보내드려요</p>
+<h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: "#f0ede8" }}>비밀번호 찾기</h2>
+<p style={{ color: "#555", fontSize: 13, marginTop: 6 }}>가입 시 사용한 이메일로 재설정 링크를 보내드려요</p>
 </div>
 {resetSent ? (
-<div style={{ background: “#1a2e1a”, border: “1px solid #2a4a2a”, borderRadius: 14, padding: 24, textAlign: “center” }}>
+<div style={{ background: "#1a2e1a", border: "1px solid #2a4a2a", borderRadius: 14, padding: 24, textAlign: "center" }}>
 <div style={{ fontSize: 36, marginBottom: 12 }}>✉️</div>
-<div style={{ color: “#6de8a0”, fontWeight: 700, fontSize: 16, marginBottom: 8 }}>이메일을 보냈어요!</div>
-<div style={{ color: “#888”, fontSize: 13, lineHeight: 1.7 }}>{resetEmail} 로 비밀번호 재설정 링크를 전송했어요.</div>
-<button onClick={() => { setStep(“auth”); setResetSent(false); setResetEmail(””); }}
-style={{ marginTop: 20, width: “100%”, padding: “13px”, background: “linear-gradient(135deg, #e8c96d, #d4a843)”, border: “none”, borderRadius: 12, fontSize: 15, fontWeight: 800, color: “#111”, cursor: “pointer” }}>
+<div style={{ color: "#6de8a0", fontWeight: 700, fontSize: 16, marginBottom: 8 }}>이메일을 보냈어요!</div>
+<div style={{ color: "#888", fontSize: 13, lineHeight: 1.7 }}>{resetEmail} 로 비밀번호 재설정 링크를 전송했어요.</div>
+<button onClick={() => { setStep("auth"); setResetSent(false); setResetEmail(""); }}
+style={{ marginTop: 20, width: "100%", padding: "13px", background: "linear-gradient(135deg, #e8c96d, #d4a843)", border: "none", borderRadius: 12, fontSize: 15, fontWeight: 800, color: "#111", cursor: "pointer" }}>
 로그인으로 돌아가기
 </button>
 </div>
 ) : (
-<div style={{ background: “#1a1a1a”, borderRadius: 16, padding: 24, border: “1px solid #2a2a2a” }}>
+<div style={{ background: "#1a1a1a", borderRadius: 16, padding: 24, border: "1px solid #2a2a2a" }}>
 <div style={{ marginBottom: 20 }}>
-<label style={{ fontSize: 13, color: “#888”, display: “block”, marginBottom: 6 }}>이메일</label>
-<input value={resetEmail} onChange={e => setResetEmail(e.target.value)} onKeyDown={e => e.key === “Enter” && handleReset()} placeholder=“가입 시 이메일 입력” style={inputStyle} />
+<label style={{ fontSize: 13, color: "#888", display: "block", marginBottom: 6 }}>이메일</label>
+<input value={resetEmail} onChange={e => setResetEmail(e.target.value)} onKeyDown={e => e.key === "Enter" && handleReset()} placeholder="가입 시 이메일 입력" style={inputStyle} />
 </div>
-{error && <div style={{ background: “#2e1a1a”, border: “1px solid #5a2020”, borderRadius: 8, padding: “10px 14px”, color: “#e87a6d”, fontSize: 13, marginBottom: 16 }}>{error}</div>}
+{error && <div style={{ background: "#2e1a1a", border: "1px solid #5a2020", borderRadius: 8, padding: "10px 14px", color: "#e87a6d", fontSize: 13, marginBottom: 16 }}>{error}</div>}
 <button onClick={handleReset} disabled={loading}
-style={{ width: “100%”, padding: “14px”, background: loading ? “#555” : “linear-gradient(135deg, #e8c96d, #d4a843)”, border: “none”, borderRadius: 12, fontSize: 15, fontWeight: 800, color: “#111”, cursor: loading ? “default” : “pointer”, marginBottom: 10 }}>
-{loading ? “전송 중…” : “재설정 링크 보내기”}
+style={{ width: "100%", padding: "14px", background: loading ? "#555" : "linear-gradient(135deg, #e8c96d, #d4a843)", border: "none", borderRadius: 12, fontSize: 15, fontWeight: 800, color: "#111", cursor: loading ? "default" : "pointer", marginBottom: 10 }}>
+{loading ? "전송 중..." : "재설정 링크 보내기"}
 </button>
-<button onClick={() => { setStep(“auth”); setError(””); }}
-style={{ width: “100%”, padding: “12px”, background: “none”, border: “1px solid #2a2a2a”, borderRadius: 12, fontSize: 14, color: “#555”, cursor: “pointer” }}>
+<button onClick={() => { setStep("auth"); setError(""); }}
+style={{ width: "100%", padding: "12px", background: "none", border: "1px solid #2a2a2a", borderRadius: 12, fontSize: 14, color: "#555", cursor: "pointer" }}>
 뒤로 가기
 </button>
 </div>
@@ -363,84 +373,86 @@ style={{ width: “100%”, padding: “12px”, background: “none”, border:
 );
 
 if (step === “weights”) return (
-<div style={{ minHeight: “100vh”, background: “#0f0f0f”, display: “flex”, alignItems: “center”, justifyContent: “center”, padding: 20 }}>
-<div style={{ width: “100%”, maxWidth: 400 }}>
-<div style={{ textAlign: “center”, marginBottom: 24 }}>
+
+<div style={{ minHeight: "100vh", background: "#0f0f0f", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+<div style={{ width: "100%", maxWidth: 400 }}>
+<div style={{ textAlign: "center", marginBottom: 24 }}>
 <div style={{ fontSize: 40, marginBottom: 8 }}>⚖️</div>
-<h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: “#f0ede8” }}>시작 중량 설정</h2>
-<p style={{ color: “#555”, fontSize: 13, marginTop: 6 }}>각 운동의 시작 중량을 입력해주세요</p>
+<h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: "#f0ede8" }}>시작 중량 설정</h2>
+<p style={{ color: "#555", fontSize: 13, marginTop: 6 }}>각 운동의 시작 중량을 입력해주세요</p>
 </div>
-<div style={{ background: “#1a1a1a”, borderRadius: 16, padding: 20, border: “1px solid #2a2a2a”, marginBottom: 16 }}>
+<div style={{ background: "#1a1a1a", borderRadius: 16, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
 {Object.entries(initWeights).map(([name, w]) => (
-<div key={name} style={{ display: “flex”, justifyContent: “space-between”, alignItems: “center”, padding: “10px 0”, borderBottom: “1px solid #222” }}>
-<span style={{ fontSize: 14, color: “#f0ede8” }}>{name}</span>
-<div style={{ display: “flex”, alignItems: “center”, gap: 8 }}>
+<div key={name} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid #222" }}>
+<span style={{ fontSize: 14, color: "#f0ede8" }}>{name}</span>
+<div style={{ display: "flex", alignItems: "center", gap: 8 }}>
 <button onClick={() => setInitWeights(prev => Object.assign({}, prev, { [name]: Math.max(0, prev[name] - 5) }))}
-style={{ width: 32, height: 32, borderRadius: 8, background: “#222”, border: “1px solid #444”, color: “#f0ede8”, fontSize: 18, cursor: “pointer” }}>-</button>
-<span style={{ fontSize: 16, fontWeight: 700, color: “#e8c96d”, minWidth: 50, textAlign: “center” }}>{w}kg</span>
+style={{ width: 32, height: 32, borderRadius: 8, background: "#222", border: "1px solid #444", color: "#f0ede8", fontSize: 18, cursor: "pointer" }}>-</button>
+<span style={{ fontSize: 16, fontWeight: 700, color: "#e8c96d", minWidth: 50, textAlign: "center" }}>{w}kg</span>
 <button onClick={() => setInitWeights(prev => Object.assign({}, prev, { [name]: prev[name] + 5 }))}
-style={{ width: 32, height: 32, borderRadius: 8, background: “#222”, border: “1px solid #444”, color: “#f0ede8”, fontSize: 18, cursor: “pointer” }}>+</button>
+style={{ width: 32, height: 32, borderRadius: 8, background: "#222", border: "1px solid #444", color: "#f0ede8", fontSize: 18, cursor: "pointer" }}>+</button>
 </div>
 </div>
 ))}
 </div>
-{error && <div style={{ background: “#2e1a1a”, border: “1px solid #5a2020”, borderRadius: 8, padding: “10px 14px”, color: “#e87a6d”, fontSize: 13, marginBottom: 16 }}>{error}</div>}
+{error && <div style={{ background: "#2e1a1a", border: "1px solid #5a2020", borderRadius: 8, padding: "10px 14px", color: "#e87a6d", fontSize: 13, marginBottom: 16 }}>{error}</div>}
 <button onClick={handleWeightsDone} disabled={loading}
-style={{ width: “100%”, padding: “14px”, background: loading ? “#555” : “linear-gradient(135deg, #e8c96d, #d4a843)”, border: “none”, borderRadius: 12, fontSize: 15, fontWeight: 800, color: “#111”, cursor: “pointer” }}>
-{loading ? “처리 중…” : “시작하기”}
+style={{ width: "100%", padding: "14px", background: loading ? "#555" : "linear-gradient(135deg, #e8c96d, #d4a843)", border: "none", borderRadius: 12, fontSize: 15, fontWeight: 800, color: "#111", cursor: "pointer" }}>
+{loading ? "처리 중..." : "시작하기"}
 </button>
 </div>
 </div>
 );
 
 return (
-<div style={{ minHeight: “100vh”, background: “#0f0f0f”, display: “flex”, alignItems: “center”, justifyContent: “center”, padding: 20 }}>
-<div style={{ width: “100%”, maxWidth: 400 }}>
-<div style={{ textAlign: “center”, marginBottom: 36 }}>
+
+<div style={{ minHeight: "100vh", background: "#0f0f0f", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+<div style={{ width: "100%", maxWidth: 400 }}>
+<div style={{ textAlign: "center", marginBottom: 36 }}>
 <div style={{ fontSize: 48, marginBottom: 8 }}>🏋️</div>
-<h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: “#f0ede8” }}>SetUp</h1>
-<p style={{ color: “#555”, fontSize: 13, marginTop: 6 }}>나만의 운동 기록을 관리하세요</p>
+<h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: "#f0ede8" }}>SetUp</h1>
+<p style={{ color: "#555", fontSize: 13, marginTop: 6 }}>나만의 운동 기록을 관리하세요</p>
 </div>
-<div style={{ display: “flex”, background: “#1a1a1a”, borderRadius: 12, padding: 4, marginBottom: 24 }}>
-{[[“login”, “로그인”], [“register”, “회원가입”]].map(([v, label]) => (
-<button key={v} onClick={() => { setMode(v); setError(””); }}
-style={{ flex: 1, padding: “10px”, border: “none”, borderRadius: 9, background: mode === v ? “#e8c96d” : “none”, color: mode === v ? “#111” : “#555”, fontWeight: mode === v ? 700 : 400, fontSize: 14, cursor: “pointer” }}>
+<div style={{ display: "flex", background: "#1a1a1a", borderRadius: 12, padding: 4, marginBottom: 24 }}>
+{[["login", "로그인"], ["register", "회원가입"]].map(([v, label]) => (
+<button key={v} onClick={() => { setMode(v); setError(""); }}
+style={{ flex: 1, padding: "10px", border: "none", borderRadius: 9, background: mode === v ? "#e8c96d" : "none", color: mode === v ? "#111" : "#555", fontWeight: mode === v ? 700 : 400, fontSize: 14, cursor: "pointer" }}>
 {label}
 </button>
 ))}
 </div>
-<div style={{ background: “#1a1a1a”, borderRadius: 16, padding: 24, border: “1px solid #2a2a2a” }}>
+<div style={{ background: "#1a1a1a", borderRadius: 16, padding: 24, border: "1px solid #2a2a2a" }}>
 <div style={{ marginBottom: 16 }}>
-<label style={{ fontSize: 13, color: “#888”, display: “block”, marginBottom: 6 }}>아이디</label>
-<input value={id} onChange={e => setId(e.target.value)} onKeyDown={e => e.key === “Enter” && handle()} placeholder=“아이디 입력” style={inputStyle} />
+<label style={{ fontSize: 13, color: "#888", display: "block", marginBottom: 6 }}>아이디</label>
+<input value={id} onChange={e => setId(e.target.value)} onKeyDown={e => e.key === "Enter" && handle()} placeholder="아이디 입력" style={inputStyle} />
 </div>
-{mode === “register” && (
+{mode === "register" && (
 <div style={{ marginBottom: 16 }}>
-<label style={{ fontSize: 13, color: “#888”, display: “block”, marginBottom: 6 }}>이메일 <span style={{ color: “#555”, fontSize: 11 }}>(비밀번호 찾기에 사용돼요)</span></label>
-<input type=“email” value={email} onChange={e => setEmail(e.target.value)} placeholder=“이메일 입력” style={inputStyle} />
+<label style={{ fontSize: 13, color: "#888", display: "block", marginBottom: 6 }}>이메일 <span style={{ color: "#555", fontSize: 11 }}>(비밀번호 찾기에 사용돼요)</span></label>
+<input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="이메일 입력" style={inputStyle} />
 </div>
 )}
-<div style={{ marginBottom: mode === “login” ? 8 : 20 }}>
-<label style={{ fontSize: 13, color: “#888”, display: “block”, marginBottom: 6 }}>
-비밀번호{mode === “register” && <span style={{ color: “#555”, fontSize: 11 }}> (6자 이상)</span>}
+<div style={{ marginBottom: mode === "login" ? 8 : 20 }}>
+<label style={{ fontSize: 13, color: "#888", display: "block", marginBottom: 6 }}>
+비밀번호{mode === "register" && <span style={{ color: "#555", fontSize: 11 }}> (6자 이상)</span>}
 </label>
-<input type=“password” value={pw} onChange={e => setPw(e.target.value)} onKeyDown={e => e.key === “Enter” && handle()} placeholder=“비밀번호 입력” style={inputStyle} />
+<input type="password" value={pw} onChange={e => setPw(e.target.value)} onKeyDown={e => e.key === "Enter" && handle()} placeholder="비밀번호 입력" style={inputStyle} />
 </div>
-{mode === “login” && (
-<div style={{ textAlign: “right”, marginBottom: 16 }}>
-<button onClick={() => { setStep(“reset”); setError(””); }}
-style={{ background: “none”, border: “none”, color: “#6db8e8”, fontSize: 12, cursor: “pointer”, padding: 0 }}>
+{mode === "login" && (
+<div style={{ textAlign: "right", marginBottom: 16 }}>
+<button onClick={() => { setStep("reset"); setError(""); }}
+style={{ background: "none", border: "none", color: "#6db8e8", fontSize: 12, cursor: "pointer", padding: 0 }}>
 비밀번호를 잊으셨나요?
 </button>
 </div>
 )}
-{error && <div style={{ background: “#2e1a1a”, border: “1px solid #5a2020”, borderRadius: 8, padding: “10px 14px”, color: “#e87a6d”, fontSize: 13, marginBottom: 16 }}>{error}</div>}
+{error && <div style={{ background: "#2e1a1a", border: "1px solid #5a2020", borderRadius: 8, padding: "10px 14px", color: "#e87a6d", fontSize: 13, marginBottom: 16 }}>{error}</div>}
 <button onClick={handle} disabled={loading}
-style={{ width: “100%”, padding: “14px”, background: loading ? “#555” : “linear-gradient(135deg, #e8c96d, #d4a843)”, border: “none”, borderRadius: 12, fontSize: 15, fontWeight: 800, color: “#111”, cursor: loading ? “default” : “pointer” }}>
-{loading ? “처리 중…” : mode === “login” ? “로그인” : “회원가입”}
+style={{ width: "100%", padding: "14px", background: loading ? "#555" : "linear-gradient(135deg, #e8c96d, #d4a843)", border: "none", borderRadius: 12, fontSize: 15, fontWeight: 800, color: "#111", cursor: loading ? "default" : "pointer" }}>
+{loading ? "처리 중..." : mode === "login" ? "로그인" : "회원가입"}
 </button>
 </div>
-<p style={{ textAlign: “center”, color: “#333”, fontSize: 12, marginTop: 20 }}>첫 번째 가입자는 자동으로 관리자가 됩니다</p>
+<p style={{ textAlign: "center", color: "#333", fontSize: 12, marginTop: 20 }}>첫 번째 가입자는 자동으로 관리자가 됩니다</p>
 </div>
 </div>
 );
@@ -450,6 +462,7 @@ function AdminPanel({ currentUid, onClose }) {
 const [users, setUsers] = useState({});
 const [loading, setLoading] = useState(true);
 const [confirm, setConfirm] = useState(null);
+const [expandedUser, setExpandedUser] = useState(null);
 useEffect(() => { getAllUsers().then(u => { setUsers(u); setLoading(false); }); }, []);
 const handleDelete = async (uid) => {
 await deleteUser(uid);
@@ -458,36 +471,132 @@ delete updated[uid];
 setUsers(updated); setConfirm(null);
 };
 return (
-<div style={{ position: “fixed”, inset: 0, background: “#0f0f0f”, zIndex: 100, overflowY: “auto” }}>
-<div style={{ maxWidth: 480, margin: “0 auto”, padding: 20 }}>
-<div style={{ display: “flex”, justifyContent: “space-between”, alignItems: “center”, marginBottom: 24 }}>
-<h2 style={{ margin: 0, color: “#e8c96d”, fontSize: 18 }}>관리자 패널</h2>
-<button onClick={onClose} style={{ background: “#222”, border: “1px solid #333”, borderRadius: 8, color: “#aaa”, padding: “6px 14px”, cursor: “pointer” }}>닫기</button>
+
+<div style={{ position: "fixed", inset: 0, background: "#0f0f0f", zIndex: 100, overflowY: "auto" }}>
+<div style={{ maxWidth: 480, margin: "0 auto", padding: 20 }}>
+<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+<h2 style={{ margin: 0, color: "#e8c96d", fontSize: 18 }}>관리자 패널</h2>
+<button onClick={onClose} style={{ background: "#222", border: "1px solid #333", borderRadius: 8, color: "#aaa", padding: "6px 14px", cursor: "pointer" }}>닫기</button>
 </div>
-<div style={{ background: “#1a1a1a”, borderRadius: 14, border: “1px solid #2a2a2a”, overflow: “hidden” }}>
-<div style={{ padding: “12px 16px”, borderBottom: “1px solid #2a2a2a”, color: “#555”, fontSize: 13 }}>전체 유저 ({Object.keys(users).length}명)</div>
+<div style={{ background: "#1a1a1a", borderRadius: 14, border: "1px solid #2a2a2a", overflow: "hidden" }}>
+<div style={{ padding: "12px 16px", borderBottom: "1px solid #2a2a2a", color: "#555", fontSize: 13 }}>전체 유저 ({Object.keys(users).length}명)</div>
 {loading ? (
-<div style={{ padding: 20, textAlign: “center”, color: “#444” }}>불러오는 중…</div>
+<div style={{ padding: 20, textAlign: "center", color: "#444" }}>불러오는 중...</div>
 ) : Object.entries(users).map(([uid, info]) => (
-<div key={uid} style={{ display: “flex”, justifyContent: “space-between”, alignItems: “center”, padding: “14px 16px”, borderBottom: “1px solid #1e1e1e” }}>
+<div key={uid} style={{ borderBottom: "1px solid #1e1e1e" }}>
+<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 16px" }}>
 <div>
-<span style={{ fontWeight: 600, color: uid === currentUid ? “#e8c96d” : “#f0ede8” }}>{uid}</span>
-{info.isAdmin && <span style={{ marginLeft: 6, fontSize: 11, color: “#e8c96d”, background: “#2e2a1a”, padding: “2px 7px”, borderRadius: 20 }}>관리자</span>}
-{uid === currentUid && <span style={{ marginLeft: 6, fontSize: 11, color: “#6db8e8” }}>나</span>}
+<span style={{ fontWeight: 600, color: uid === currentUid ? "#e8c96d" : "#f0ede8" }}>{uid}</span>
+{info.isAdmin && <span style={{ marginLeft: 6, fontSize: 11, color: "#e8c96d", background: "#2e2a1a", padding: "2px 7px", borderRadius: 20 }}>관리자</span>}
+{uid === currentUid && <span style={{ marginLeft: 6, fontSize: 11, color: "#6db8e8" }}>나</span>}
+{info.loginHistory && <div style={{ fontSize: 11, color: "#444", marginTop: 3 }}>로그인 {info.loginHistory.length}회</div>}
 </div>
+<div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+{info.loginHistory && info.loginHistory.length > 0 && (
+<button onClick={() => setExpandedUser(expandedUser === uid ? null : uid)}
+style={{ padding: "4px 8px", background: "#1a1a2e", border: "1px solid #2a2a4a", borderRadius: 6, color: "#6db8e8", fontSize: 11, cursor: "pointer" }}>
+기록
+</button>
+)}
 {uid !== currentUid && !info.isAdmin && (
 confirm === uid ? (
-<div style={{ display: “flex”, gap: 6 }}>
-<button onClick={() => setConfirm(null)} style={{ padding: “5px 10px”, background: “#222”, border: “1px solid #333”, borderRadius: 6, color: “#aaa”, fontSize: 12, cursor: “pointer” }}>취소</button>
-<button onClick={() => handleDelete(uid)} style={{ padding: “5px 10px”, background: “#3a1010”, border: “1px solid #5a2020”, borderRadius: 6, color: “#e87a6d”, fontSize: 12, cursor: “pointer” }}>삭제</button>
+<div style={{ display: "flex", gap: 6 }}>
+<button onClick={() => setConfirm(null)} style={{ padding: "5px 10px", background: "#222", border: "1px solid #333", borderRadius: 6, color: "#aaa", fontSize: 12, cursor: "pointer" }}>취소</button>
+<button onClick={() => handleDelete(uid)} style={{ padding: "5px 10px", background: "#3a1010", border: "1px solid #5a2020", borderRadius: 6, color: "#e87a6d", fontSize: 12, cursor: "pointer" }}>삭제</button>
 </div>
 ) : (
-<button onClick={() => setConfirm(uid)} style={{ padding: “5px 12px”, background: “none”, border: “1px solid #3a2020”, borderRadius: 6, color: “#e87a6d”, fontSize: 12, cursor: “pointer” }}>삭제</button>
+<button onClick={() => setConfirm(uid)} style={{ padding: "5px 12px", background: "none", border: "1px solid #3a2020", borderRadius: 6, color: "#e87a6d", fontSize: 12, cursor: "pointer" }}>삭제</button>
 )
+)}
+</div>
+</div>
+{expandedUser === uid && info.loginHistory && (
+<div style={{ padding: "0 16px 14px", background: "#111" }}>
+<div style={{ fontSize: 11, color: "#555", marginBottom: 6 }}>최근 로그인 기록</div>
+{[...info.loginHistory].reverse().slice(0, 5).map((log, i) => (
+<div key={i} style={{ fontSize: 11, color: "#666", padding: "4px 0", borderBottom: "1px solid #1a1a1a", display: "flex", justifyContent: "space-between" }}>
+<span>{formatDateTime(log.time)}</span>
+<span style={{ color: "#444" }}>{log.device}</span>
+</div>
+))}
+</div>
 )}
 </div>
 ))}
 </div>
+</div>
+</div>
+);
+}
+
+// 프로필 편집 패널
+function ProfilePanel({ uid, onClose }) {
+const [newPw, setNewPw] = useState(””);
+const [confirmPw, setConfirmPw] = useState(””);
+const [currentPw, setCurrentPw] = useState(””);
+const [error, setError] = useState(””);
+const [success, setSuccess] = useState(””);
+const [loading, setLoading] = useState(false);
+
+const inputStyle = { width: “100%”, padding: “12px 14px”, background: “#111”, border: “1px solid #333”, borderRadius: 10, color: “#f0ede8”, fontSize: 14, outline: “none”, boxSizing: “border-box” };
+
+const handleChangePw = async () => {
+if (!currentPw || !newPw || !confirmPw) { setError(“모든 항목을 입력해주세요.”); return; }
+if (newPw.length < 6) { setError(“새 비밀번호는 6자 이상이어야 해요.”); return; }
+if (newPw !== confirmPw) { setError(“새 비밀번호가 일치하지 않아요.”); return; }
+setLoading(true); setError(””); setSuccess(””);
+try {
+const firebaseUser = auth.currentUser;
+if (!firebaseUser) { setError(“로그인 상태를 확인해주세요.”); return; }
+const credential = EmailAuthProvider.credential(firebaseUser.email, currentPw);
+await reauthenticateWithCredential(firebaseUser, credential);
+await updatePassword(firebaseUser, newPw);
+// Firestore pw도 업데이트
+await updateDoc(doc(db, “users”, uid), { pw: newPw });
+setSuccess(“비밀번호가 변경됐어요!”);
+setCurrentPw(””); setNewPw(””); setConfirmPw(””);
+} catch (e) {
+if (e.code === “auth/wrong-password” || e.code === “auth/invalid-credential”) setError(“현재 비밀번호가 틀렸어요.”);
+else setError(“오류가 발생했어요: “ + e.message);
+} finally { setLoading(false); }
+};
+
+return (
+
+<div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", zIndex: 200, display: "flex", alignItems: "flex-end" }}>
+<div style={{ background: "#1a1a1a", borderRadius: "20px 20px 0 0", padding: 24, width: "100%", maxWidth: 480, margin: "0 auto", maxHeight: "80vh", overflowY: "auto" }}>
+<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+<h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: "#e8c96d" }}>프로필 편집</h2>
+<button onClick={onClose} style={{ background: "#222", border: "1px solid #333", borderRadius: 8, color: "#aaa", padding: "6px 14px", cursor: "pointer", fontSize: 13 }}>닫기</button>
+</div>
+<div style={{ background: "#111", borderRadius: 12, padding: "12px 16px", marginBottom: 20, display: "flex", alignItems: "center", gap: 12 }}>
+<div style={{ width: 40, height: 40, borderRadius: "50%", background: "#e8c96d22", border: "2px solid #e8c96d44", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, color: "#e8c96d", fontWeight: 800 }}>{uid[0].toUpperCase()}</div>
+<div>
+<div style={{ fontSize: 15, fontWeight: 700, color: "#f0ede8" }}>{uid}</div>
+<div style={{ fontSize: 12, color: "#555" }}>아이디는 변경할 수 없어요</div>
+</div>
+</div>
+<h3 style={{ margin: "0 0 14px", fontSize: 15, color: "#f0ede8", fontWeight: 700 }}>비밀번호 변경</h3>
+<div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
+<div>
+<label style={{ fontSize: 12, color: "#666", display: "block", marginBottom: 6 }}>현재 비밀번호</label>
+<input type="password" value={currentPw} onChange={e => setCurrentPw(e.target.value)} placeholder="현재 비밀번호" style={inputStyle} />
+</div>
+<div>
+<label style={{ fontSize: 12, color: "#666", display: "block", marginBottom: 6 }}>새 비밀번호</label>
+<input type="password" value={newPw} onChange={e => setNewPw(e.target.value)} placeholder="새 비밀번호 (6자 이상)" style={inputStyle} />
+</div>
+<div>
+<label style={{ fontSize: 12, color: "#666", display: "block", marginBottom: 6 }}>새 비밀번호 확인</label>
+<input type="password" value={confirmPw} onChange={e => setConfirmPw(e.target.value)} placeholder="새 비밀번호 재입력" style={inputStyle} />
+</div>
+</div>
+{error && <div style={{ background: "#2e1a1a", border: "1px solid #5a2020", borderRadius: 8, padding: "10px 14px", color: "#e87a6d", fontSize: 13, marginBottom: 12 }}>{error}</div>}
+{success && <div style={{ background: "#1a2e1a", border: "1px solid #2a5a2a", borderRadius: 8, padding: "10px 14px", color: "#6de8a0", fontSize: 13, marginBottom: 12 }}>{success}</div>}
+<button onClick={handleChangePw} disabled={loading}
+style={{ width: "100%", padding: "14px", background: loading ? "#555" : "linear-gradient(135deg, #e8c96d, #d4a843)", border: "none", borderRadius: 12, fontSize: 15, fontWeight: 800, color: "#111", cursor: loading ? "default" : "pointer" }}>
+{loading ? "변경 중..." : "비밀번호 변경"}
+</button>
 </div>
 </div>
 );
@@ -513,6 +622,7 @@ const [lowerChoice, setLowerChoice] = useState(null);
 const [showWeightEdit, setShowWeightEdit] = useState(false);
 const [selectedExercise, setSelectedExercise] = useState(“벤치프레스”);
 const [descExercise, setDescExercise] = useState(null);
+const [showProfile, setShowProfile] = useState(false);
 
 const DIFFICULTY_OPTIONS = [
 { key: “easy”, label: “적당했어요”, seconds: 90, color: “#6de8a0”, bg: “#1a2e1a”, emoji: “😊” },
@@ -625,542 +735,585 @@ return s;
 })();
 
 if (!dataLoaded) return (
-<div style={{ minHeight: “100vh”, background: “#0f0f0f”, display: “flex”, alignItems: “center”, justifyContent: “center”, color: “#555” }}>
-데이터 불러오는 중…
+
+<div style={{ minHeight: "100vh", background: "#0f0f0f", display: "flex", alignItems: "center", justifyContent: "center", color: "#555" }}>
+데이터 불러오는 중...
 </div>
 );
 
 if (showWeightEdit) return (
-<div style={{ minHeight: “100vh”, background: “#0f0f0f”, padding: 20 }}>
-<div style={{ maxWidth: 480, margin: “0 auto” }}>
-<div style={{ display: “flex”, justifyContent: “space-between”, alignItems: “center”, marginBottom: 24, paddingTop: 20 }}>
-<h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: “#f0ede8” }}>중량 설정</h2>
-<button onClick={() => setShowWeightEdit(false)} style={{ background: “#222”, border: “1px solid #333”, borderRadius: 8, color: “#aaa”, padding: “6px 14px”, cursor: “pointer” }}>닫기</button>
+
+<div style={{ minHeight: "100vh", background: "#0f0f0f", padding: 20 }}>
+<div style={{ maxWidth: 480, margin: "0 auto" }}>
+<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, paddingTop: 20 }}>
+<h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: "#f0ede8" }}>중량 설정</h2>
+<button onClick={() => setShowWeightEdit(false)} style={{ background: "#222", border: "1px solid #333", borderRadius: 8, color: "#aaa", padding: "6px 14px", cursor: "pointer" }}>닫기</button>
 </div>
-<div style={{ background: “#1a1a1a”, borderRadius: 16, padding: 20, border: “1px solid #2a2a2a”, marginBottom: 16 }}>
+<div style={{ background: "#1a1a1a", borderRadius: 16, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
 {Object.entries(weights).map(([name, w]) => (
-<div key={name} style={{ display: “flex”, justifyContent: “space-between”, alignItems: “center”, padding: “12px 0”, borderBottom: “1px solid #222” }}>
-<span style={{ fontSize: 14, color: “#f0ede8” }}>{name}</span>
-<div style={{ display: “flex”, alignItems: “center”, gap: 8 }}>
-<button onClick={() => setWeights(prev => Object.assign({}, prev, { [name]: Math.max(0, prev[name] - 5) }))} style={{ width: 36, height: 36, borderRadius: 8, background: “#222”, border: “1px solid #444”, color: “#f0ede8”, fontSize: 20, cursor: “pointer” }}>-</button>
-<span style={{ fontSize: 16, fontWeight: 700, color: “#e8c96d”, minWidth: 55, textAlign: “center” }}>{w}kg</span>
-<button onClick={() => setWeights(prev => Object.assign({}, prev, { [name]: prev[name] + 5 }))} style={{ width: 36, height: 36, borderRadius: 8, background: “#222”, border: “1px solid #444”, color: “#f0ede8”, fontSize: 20, cursor: “pointer” }}>+</button>
+<div key={name} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0", borderBottom: "1px solid #222" }}>
+<span style={{ fontSize: 14, color: "#f0ede8" }}>{name}</span>
+<div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+<button onClick={() => setWeights(prev => Object.assign({}, prev, { [name]: Math.max(0, prev[name] - 5) }))} style={{ width: 36, height: 36, borderRadius: 8, background: "#222", border: "1px solid #444", color: "#f0ede8", fontSize: 20, cursor: "pointer" }}>-</button>
+<span style={{ fontSize: 16, fontWeight: 700, color: "#e8c96d", minWidth: 55, textAlign: "center" }}>{w}kg</span>
+<button onClick={() => setWeights(prev => Object.assign({}, prev, { [name]: prev[name] + 5 }))} style={{ width: 36, height: 36, borderRadius: 8, background: "#222", border: "1px solid #444", color: "#f0ede8", fontSize: 20, cursor: "pointer" }}>+</button>
 </div>
 </div>
 ))}
 </div>
-<button onClick={() => setShowWeightEdit(false)} style={{ width: “100%”, padding: “14px”, background: “linear-gradient(135deg, #e8c96d, #d4a843)”, border: “none”, borderRadius: 12, fontSize: 15, fontWeight: 800, color: “#111”, cursor: “pointer” }}>
+<button onClick={() => setShowWeightEdit(false)} style={{ width: "100%", padding: "14px", background: "linear-gradient(135deg, #e8c96d, #d4a843)", border: "none", borderRadius: 12, fontSize: 15, fontWeight: 800, color: "#111", cursor: "pointer" }}>
 저장 완료
 </button>
-<p style={{ textAlign: “center”, color: “#555”, fontSize: 12, marginTop: 12 }}>변경사항은 자동으로 저장돼요</p>
+<p style={{ textAlign: "center", color: "#555", fontSize: 12, marginTop: 12 }}>변경사항은 자동으로 저장돼요</p>
 </div>
 </div>
 );
 
 return (
-<div style={{ minHeight: “100vh”, background: “#0f0f0f”, color: “#f0ede8”, fontFamily: “sans-serif”, maxWidth: 480, width: “100%”, margin: “0 auto”, paddingBottom: 80, overflowX: “hidden”, boxSizing: “border-box” }}>
+
+<div style={{ minHeight: "100vh", background: "#0f0f0f", color: "#f0ede8", fontFamily: "sans-serif", maxWidth: 480, width: "100%", margin: "0 auto", paddingBottom: 80, overflowX: "hidden", boxSizing: "border-box" }}>
 {showAdmin && <AdminPanel currentUid={uid} onClose={() => setShowAdmin(false)} />}
 {descExercise && <ExerciseDescPanel name={descExercise} onClose={() => setDescExercise(null)} />}
+{showProfile && <ProfilePanel uid={uid} onClose={() => setShowProfile(false)} />}
 
-```
-  <div style={{ background: "linear-gradient(135deg, #1a1a1a 0%, #111 100%)", padding: "28px 24px 20px", borderBottom: "1px solid #222" }}>
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <span style={{ fontSize: 28 }}>🏋️</span>
-        <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: "#f0ede8" }}>SetUp</h1>
-      </div>
-      <div style={{ display: "flex", gap: 6 }}>
-        {isAdmin && <button onClick={() => setShowAdmin(true)} style={{ padding: "6px 10px", background: "#2e2a1a", border: "1px solid #e8c96d44", borderRadius: 8, color: "#e8c96d", fontSize: 11, cursor: "pointer" }}>관리</button>}
-        <button onClick={onLogout} style={{ padding: "6px 10px", background: "#1e1e1e", border: "1px solid #333", borderRadius: 8, color: "#666", fontSize: 11, cursor: "pointer" }}>로그아웃</button>
-      </div>
-    </div>
-    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12, marginTop: 6 }}>
-      <div style={{ width: 22, height: 22, borderRadius: "50%", background: "#e8c96d22", border: "1px solid #e8c96d44", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: "#e8c96d" }}>{uid[0].toUpperCase()}</div>
-      <span style={{ fontSize: 12, color: "#888" }}>{uid}</span>
-      {isAdmin && <span style={{ fontSize: 10, color: "#e8c96d", background: "#2e2a1a", padding: "1px 6px", borderRadius: 20 }}>관리자</span>}
-    </div>
-    <div style={{ display: "flex", gap: 16 }}>
-      {[{ label: "총 세션", val: totalSessions }, { label: "연속", val: streak + "회" }, { label: "다음", val: "워크아웃 " + nextWorkout }].map(s => (
-        <div key={s.label} style={{ background: "#1e1e1e", borderRadius: 10, padding: "8px 14px", flex: 1, textAlign: "center" }}>
-          <div style={{ fontSize: 18, fontWeight: 700, color: "#e8c96d" }}>{s.val}</div>
-          <div style={{ fontSize: 11, color: "#666", marginTop: 2 }}>{s.label}</div>
-        </div>
-      ))}
-    </div>
-  </div>
-
-  <div style={{ display: "flex", background: "#161616", borderBottom: "1px solid #222" }}>
-    {TABS.map((t, i) => (
-      <button key={t} onClick={() => setTab(i)} style={{ flex: 1, padding: "14px 4px", background: "none", border: "none", color: tab === i ? "#e8c96d" : "#555", fontWeight: tab === i ? 700 : 400, fontSize: 12, cursor: "pointer", borderBottom: tab === i ? "2px solid #e8c96d" : "2px solid transparent" }}>
-        {t}
-      </button>
-    ))}
-  </div>
-
-  <div style={{ padding: "20px 16px", overflowX: "hidden" }}>
-    {tab === 0 && (
-      <div>
-        {!session ? (
-          <div>
-            <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, marginBottom: 16, border: "1px solid #2a2a2a" }}>
-              <div style={{ fontSize: 13, color: "#888", marginBottom: 6 }}>다음 운동</div>
-              <div style={{ fontSize: 26, fontWeight: 800, color: "#e8c96d", marginBottom: 12 }}>워크아웃 {nextWorkout}</div>
-              {getWorkouts(lowerChoice || "bulgarian")[nextWorkout].map(ex => {
-                const w = weights[ex.name] || DEFAULT_WEIGHTS[ex.name];
-                const warmups = getWarmupSets(w, ex.isBulgarian);
-                return (
-                  <div key={ex.name} style={{ padding: "12px 0", borderBottom: "1px solid #1e1e1e" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ fontSize: 15, fontWeight: 600 }}>{ex.name}</span>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <span style={{ fontSize: 13, color: "#aaa" }}>{ex.sets}x{ex.reps} <span style={{ color: "#e8c96d", fontWeight: 700 }}>{w}kg</span></span>
-                        <button onClick={() => setDescExercise(ex.name)}
-                          style={{ padding: "3px 8px", background: "#222", border: "1px solid #333", borderRadius: 6, color: "#888", fontSize: 10, cursor: "pointer" }}>
-                          자세
-                        </button>
-                      </div>
-                    </div>
-                    {ex.note && <div style={{ fontSize: 11, color: "#6db8e8", marginTop: 3 }}>💡 {ex.note}</div>}
-                    <div style={{ fontSize: 11, color: "#444", marginTop: 4 }}>
-                      웜업: {warmups.map(ws => ws.weight === 0 ? "맨몸" : ws.weight + "kg").join(" → ")} → 본세트
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            {lowerChoice === null ? (
-              <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a" }}>
-                <div style={{ fontSize: 14, color: "#888", marginBottom: 14, textAlign: "center" }}>오늘 하체 운동을 선택하세요</div>
-                <div style={{ display: "flex", gap: 10 }}>
-                  <button onClick={() => setLowerChoice("bulgarian")}
-                    style={{ flex: 1, padding: "16px 8px", background: "#111", border: "2px solid #2a2a2a", borderRadius: 12, color: "#f0ede8", fontSize: 13, fontWeight: 600, cursor: "pointer", lineHeight: 1.6, textAlign: "center" }}>
-                    불가리안 스플릿 스쿼트
-                  </button>
-                  <button onClick={() => setLowerChoice("squat")}
-                    style={{ flex: 1, padding: "16px 8px", background: "#111", border: "2px solid #2a2a2a", borderRadius: 12, color: "#f0ede8", fontSize: 13, fontWeight: 600, cursor: "pointer", lineHeight: 1.6, textAlign: "center" }}>
-                    스쿼트
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                <button onClick={() => startSession(lowerChoice)}
-                  style={{ width: "100%", padding: "16px", background: "linear-gradient(135deg, #e8c96d, #d4a843)", border: "none", borderRadius: 12, fontSize: 16, fontWeight: 800, color: "#111", cursor: "pointer" }}>
-                  💪 운동 시작 ({lowerChoice === "bulgarian" ? "불가리안" : "스쿼트"})
-                </button>
-                <button onClick={() => setLowerChoice(null)}
-                  style={{ width: "100%", padding: "13px", background: "none", border: "1px solid #2a2a2a", borderRadius: 12, fontSize: 14, color: "#555", cursor: "pointer" }}>
-                  ← 하체 운동 다시 선택
-                </button>
-              </div>
-            )}
-          </div>
-        ) : done ? (
-          <div style={{ textAlign: "center", padding: "40px 0" }}>
-            <div style={{ fontSize: 60, marginBottom: 16 }}>🎉</div>
-            <h2 style={{ color: "#e8c96d", fontSize: 24, marginBottom: 8 }}>운동 완료!</h2>
-            <p style={{ color: "#888", marginBottom: 24 }}>훌륭해요! 다음 세션이 기다리고 있습니다.</p>
-            <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 16, marginBottom: 20, textAlign: "left" }}>
-              {session.exercises.map((ex, i) => {
-                const success = isMainAllDone(i, ex.sets);
-                return (
-                  <div key={ex.name} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid #222" }}>
-                    <span>{ex.name}</span>
-                    <span style={{ color: success ? "#6de8a0" : "#e86d6d" }}>{success ? "성공" : "실패"}</span>
-                  </div>
-                );
-              })}
-            </div>
-            <button onClick={() => setSession(null)} style={{ padding: "14px 32px", background: "#222", border: "1px solid #444", borderRadius: 12, color: "#f0ede8", fontSize: 15, cursor: "pointer" }}>홈으로</button>
-          </div>
-        ) : (
-          <div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>워크아웃 {session.type}</h2>
-              <span style={{ fontSize: 12, color: "#666" }}>{formatDate(session.date)}</span>
-            </div>
-            {session.exercises.map((ex, exIdx) => {
-              const warmupSets = getWarmupSets(ex.weight, ex.isBulgarian);
-              const warmupOpen = showWarmup[exIdx] !== false;
-              const warmupDone = isWarmupAllDone(exIdx, warmupSets.length);
-              const mainDone = isMainAllDone(exIdx, ex.sets);
-              return (
-                <div key={ex.name} style={{ background: mainDone ? "#1a2a1a" : "#1a1a1a", borderRadius: 14, padding: 16, marginBottom: 14, border: "1px solid " + (mainDone ? "#2a4a2a" : "#2a2a2a") }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                    <div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <div style={{ fontWeight: 700, fontSize: 16 }}>{ex.name}</div>
-                        <button onClick={() => setDescExercise(ex.name)}
-                          style={{ padding: "2px 7px", background: "#222", border: "1px solid #333", borderRadius: 6, color: "#888", fontSize: 10, cursor: "pointer" }}>
-                          자세
-                        </button>
-                      </div>
-                      <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>
-                        본세트 {ex.sets}x{ex.reps} <span style={{ color: "#e8c96d" }}>{ex.weight}kg</span>
-                        {ex.isBulgarian && <span style={{ color: "#6db8e8" }}> (한 손 {ex.weight / 2}kg)</span>}
-                      </div>
-                    </div>
-                    {mainDone && <span style={{ color: "#6de8a0", fontSize: 22 }}>✓</span>}
-                  </div>
-                  <div style={{ marginBottom: 12 }}>
-                    <button onClick={() => setShowWarmup(prev => Object.assign({}, prev, { [exIdx]: !warmupOpen }))}
-                      style={{ width: "100%", background: warmupDone ? "#1a2e1a" : "#141414", border: "1px solid " + (warmupDone ? "#2a4a2a" : "#252525"), borderRadius: warmupOpen ? "10px 10px 0 0" : "10px", padding: "9px 12px", color: warmupDone ? "#6de8a0" : "#777", fontSize: 13, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span>웜업 세트 {warmupDone ? "완료" : "(" + warmupSets.length + "세트)"}</span>
-                      <span style={{ fontSize: 11 }}>{warmupOpen ? "접기" : "펼치기"}</span>
-                    </button>
-                    {warmupOpen && (
-                      <div style={{ background: "#111", borderRadius: "0 0 10px 10px", padding: "8px 12px", border: "1px solid #252525", borderTop: "none" }}>
-                        {warmupSets.map((ws, wi) => {
-                          const isDone = completedSets["w-" + exIdx + "-" + wi];
-                          return (
-                            <div key={wi} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 0", borderBottom: wi < warmupSets.length - 1 ? "1px solid #1a1a1a" : "none" }}>
-                              <div>
-                                <span style={{ fontSize: 13, color: isDone ? "#6de8a0" : "#bbb", fontWeight: 500 }}>{ws.label}</span>
-                                <span style={{ fontSize: 12, color: "#555", marginLeft: 8 }}>{ws.weight === 0 ? "맨몸" : ws.weight + "kg"} x {ws.reps}회</span>
-                                {ex.isBulgarian && ws.weight > 0 && <span style={{ fontSize: 11, color: "#6db8e8", marginLeft: 4 }}>(한 손 {ws.weight / 2}kg)</span>}
-                              </div>
-                              <button onClick={() => toggleSet("w", exIdx, wi)}
-                                style={{ width: 34, height: 34, borderRadius: 8, border: "2px solid " + (isDone ? "#6de8a0" : "#2a2a2a"), background: isDone ? "#1e3a2a" : "#1a1a1a", color: isDone ? "#6de8a0" : "#444", fontSize: 15, cursor: "pointer" }}>
-                                {isDone ? "✓" : "○"}
-                              </button>
-                            </div>
-                          );
-                        })}
-                        <div style={{ fontSize: 11, color: "#555", marginTop: 8, paddingTop: 8, borderTop: "1px solid #1a1a1a", textAlign: "center" }}>웜업 세트 사이에는 휴식 없이 바로 진행하세요</div>
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 12, color: "#666", marginBottom: 8 }}>
-                      본 세트 {ex.weight}kg x {ex.reps}회
-                      {ex.isBulgarian && <span style={{ color: "#6db8e8" }}> 한 손 {ex.weight / 2}kg</span>}
-                    </div>
-                    <div style={{ display: "flex", gap: 8 }}>
-                      {Array.from({ length: ex.sets }, (_, i) => {
-                        const isDone = completedSets["m-" + exIdx + "-" + i];
-                        const diff = difficulty[exIdx + "-" + i];
-                        const diffOpt = DIFFICULTY_OPTIONS.find(d => d.key === diff);
-                        const isNextSet = !isDone && Array.from({ length: i }, (_, j) => completedSets["m-" + exIdx + "-" + j]).every(Boolean);
-                        return (
-                          <div key={i} style={{ flex: 1 }}>
-                            <button onClick={() => { if (!isDone) toggleSet("m", exIdx, i); }}
-                              style={{ width: "100%", aspectRatio: "1", borderRadius: 10, border: "2px solid " + (isDone ? (diffOpt ? diffOpt.color : "#6de8a0") : isNextSet ? "#555" : "#2a2a2a"), background: isDone ? (diffOpt ? diffOpt.bg : "#1e3a2a") : "#111", color: isDone ? (diffOpt ? diffOpt.color : "#6de8a0") : isNextSet ? "#888" : "#444", fontSize: isDone ? 16 : 13, fontWeight: 700, cursor: isDone ? "default" : "pointer" }}>
-                              {isDone ? (diffOpt ? diffOpt.emoji : "✓") : i + 1}
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    {Array.from({ length: ex.sets }, (_, i) => {
-                      const isDone = completedSets["m-" + exIdx + "-" + i];
-                      const hasDiff = difficulty[exIdx + "-" + i];
-                      const isLastSet = i === ex.sets - 1;
-                      if (!isDone || hasDiff) return null;
-                      return (
-                        <div key={i} style={{ marginTop: 10, background: "#161616", borderRadius: 10, padding: "12px", border: "1px solid #2a2a2a" }}>
-                          <div style={{ fontSize: 12, color: "#888", marginBottom: 8, textAlign: "center" }}>
-                            {i + 1}세트 완료! {isLastSet ? "마지막 세트예요" : "난이도는?"}
-                          </div>
-                          <div style={{ display: "flex", gap: 6 }}>
-                            {DIFFICULTY_OPTIONS.map(opt => (
-                              <button key={opt.key}
-                                onClick={() => isLastSet ? setDifficulty(prev => Object.assign({}, prev, { [exIdx + "-" + i]: opt.key })) : startRest(exIdx, i, opt.seconds, opt.key)}
-                                style={{ flex: 1, padding: "8px 4px", background: opt.bg, border: "1px solid " + opt.color + "33", borderRadius: 8, color: opt.color, fontSize: 11, fontWeight: 600, cursor: "pointer", textAlign: "center", lineHeight: 1.4 }}>
-                                {opt.emoji}<br />{opt.label}{!isLastSet && <><br /><span style={{ fontSize: 10, opacity: 0.7 }}>{opt.seconds}초</span></>}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
-                    {restTimer && restTimer.exIdx === exIdx && (
-                      <div style={{ marginTop: 10, background: "#111", borderRadius: 10, padding: "14px", border: "1px solid #2a2a2a", textAlign: "center" }}>
-                        <div style={{ fontSize: 11, color: "#666", marginBottom: 4 }}>휴식 중...</div>
-                        <div style={{ fontSize: 36, fontWeight: 800, color: restTimer.remaining <= 10 ? "#e86d6d" : "#e8c96d", letterSpacing: 2, marginBottom: 8 }}>
-                          {formatTime(restTimer.remaining)}
-                        </div>
-                        <div style={{ height: 4, background: "#222", borderRadius: 2, marginBottom: 10, overflow: "hidden" }}>
-                          <div style={{ height: "100%", width: (restTimer.remaining / restTimer.seconds * 100) + "%", background: restTimer.remaining <= 10 ? "#e86d6d" : "#e8c96d", borderRadius: 2, transition: "width 1s linear" }} />
-                        </div>
-                        {restTimer.remaining === 0 ? (
-                          <div style={{ color: "#6de8a0", fontWeight: 700, fontSize: 14 }}>휴식 완료! 다음 세트 시작하세요</div>
-                        ) : (
-                          <button onClick={skipRest} style={{ padding: "7px 20px", background: "#1e1e1e", border: "1px solid #333", borderRadius: 8, color: "#666", fontSize: 12, cursor: "pointer" }}>건너뛰기</button>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-            <button onClick={finishSession} style={{ width: "100%", padding: "15px", background: "linear-gradient(135deg, #e8c96d, #d4a843)", border: "none", borderRadius: 12, fontSize: 15, fontWeight: 800, color: "#111", cursor: "pointer", marginTop: 8 }}>
-              운동 완료 &amp; 저장
-            </button>
-            <button onClick={() => setSession(null)} style={{ width: "100%", padding: "12px", background: "none", border: "1px solid #2a2a2a", borderRadius: 12, fontSize: 14, color: "#555", cursor: "pointer", marginTop: 8 }}>
-              취소
-            </button>
-          </div>
-        )}
-      </div>
-    )}
-
-    {tab === 1 && (
-      <div>
-        <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 16, border: "1px solid #2a2a2a", marginBottom: 20 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <h3 style={{ margin: 0, fontSize: 15, color: "#f0ede8", fontWeight: 700 }}>중량 성장 그래프</h3>
-            <span style={{ fontSize: 11, color: "#444" }}>● 성공 ● 실패</span>
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14 }}>
-            {EXERCISE_NAMES.map(name => (
-              <button key={name} onClick={() => setSelectedExercise(name)}
-                style={{ padding: "5px 10px", borderRadius: 20, border: "1px solid " + (selectedExercise === name ? EXERCISE_COLORS[name] : "#2a2a2a"), background: selectedExercise === name ? EXERCISE_COLORS[name] + "22" : "none", color: selectedExercise === name ? EXERCISE_COLORS[name] : "#555", fontSize: 11, cursor: "pointer", fontWeight: selectedExercise === name ? 700 : 400 }}>
-                {name}
-              </button>
-            ))}
-          </div>
-          <div style={{ background: "#111", borderRadius: 10, padding: "12px 8px" }}>
-            <WeightGraph history={history} exerciseName={selectedExercise} />
-          </div>
-          <div style={{ display: "flex", justifyContent: "space-between", marginTop: 10 }}>
-            <span style={{ fontSize: 11, color: "#444" }}>현재: <span style={{ color: EXERCISE_COLORS[selectedExercise], fontWeight: 700 }}>{weights[selectedExercise] || "-"}kg</span></span>
-            <span style={{ fontSize: 11, color: "#444" }}>최고: <span style={{ color: "#e8c96d", fontWeight: 700 }}>
-              {(() => {
-                const vals = history.flatMap(h => h.results.filter(r => r.name === selectedExercise).map(r => r.weight));
-                return vals.length ? Math.max(...vals) + "kg" : "-";
-              })()}
-            </span></span>
-          </div>
-        </div>
-        <h3 style={{ margin: "0 0 16px", fontSize: 16, color: "#888", fontWeight: 500 }}>현재 중량</h3>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 24 }}>
-          {Object.entries(weights).map(([name, w]) => (
-            <div key={name} style={{ background: "#1a1a1a", borderRadius: 12, padding: "12px 14px", border: "1px solid #2a2a2a" }}>
-              <div style={{ fontSize: 11, color: "#555", marginBottom: 4 }}>{name}</div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: "#e8c96d" }}>{w}kg</div>
-              {name === "불가리안 스플릿 스쿼트" && <div style={{ fontSize: 11, color: "#6db8e8", marginTop: 2 }}>한 손 {w / 2}kg</div>}
-              {failCounts[name] > 0 && <div style={{ fontSize: 11, color: "#e87a6d", marginTop: 3 }}>실패 {failCounts[name]}/3</div>}
-            </div>
-          ))}
-        </div>
-        <h3 style={{ margin: "0 0 12px", fontSize: 16, color: "#888", fontWeight: 500 }}>최근 세션</h3>
-        {history.length === 0 ? (
-          <div style={{ textAlign: "center", color: "#333", padding: "40px 0" }}>아직 기록이 없습니다.</div>
-        ) : history.slice(0, 10).map((h, i) => (
-          <div key={i} style={{ background: "#1a1a1a", borderRadius: 12, padding: 14, marginBottom: 10, border: "1px solid #2a2a2a" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-              <span style={{ fontWeight: 700, color: "#e8c96d" }}>워크아웃 {h.type}</span>
-              <span style={{ fontSize: 12, color: "#555" }}>{formatDate(h.date)}</span>
-            </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-              {h.results.map(r => (
-                <span key={r.name} style={{ fontSize: 12, padding: "3px 8px", borderRadius: 20, background: r.success ? "#1e3a2a" : "#3a1e1e", color: r.success ? "#6de8a0" : "#e86d6d" }}>
-                  {r.name} {r.weight}kg {r.success ? "✓" : "✗"}
-                </span>
-              ))}
-            </div>
-          </div>
-        ))}
-        <div style={{ marginTop: 32, paddingTop: 20, borderTop: "1px solid #1e1e1e" }}>
-          <button onClick={() => setShowWeightEdit(true)} style={{ width: "100%", padding: "13px", background: "none", border: "1px solid #2a4a2a", borderRadius: 12, color: "#6de8a0", fontSize: 14, cursor: "pointer", marginBottom: 10 }}>
-            중량 설정 변경
-          </button>
-          {!resetConfirm ? (
-            <button onClick={() => setResetConfirm(true)} style={{ width: "100%", padding: "13px", background: "none", border: "1px solid #3a2020", borderRadius: 12, color: "#e87a6d", fontSize: 14, cursor: "pointer" }}>
-              내 기록 초기화
-            </button>
-          ) : (
-            <div style={{ background: "#1e1010", borderRadius: 12, padding: 16, border: "1px solid #4a2020" }}>
-              <p style={{ color: "#e87a6d", fontSize: 14, margin: "0 0 12px", textAlign: "center" }}>모든 기록과 중량이 초기화됩니다. 정말 리셋할까요?</p>
-              <div style={{ display: "flex", gap: 8 }}>
-                <button onClick={() => setResetConfirm(false)} style={{ flex: 1, padding: "11px", background: "#222", border: "1px solid #333", borderRadius: 10, color: "#aaa", fontSize: 14, cursor: "pointer" }}>취소</button>
-                <button onClick={handleReset} style={{ flex: 1, padding: "11px", background: "#3a1010", border: "1px solid #5a2020", borderRadius: 10, color: "#e87a6d", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>초기화</button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    )}
-
-    {tab === 2 && (
-      <div>
-        <h3 style={{ margin: "0 0 16px", fontSize: 16, color: "#888", fontWeight: 500 }}>바벨 원판 계산기</h3>
-        <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
-          <label style={{ fontSize: 14, color: "#888", display: "block", marginBottom: 12 }}>목표 중량</label>
-          <div style={{ textAlign: "center", fontSize: 40, fontWeight: 800, color: "#e8c96d", marginBottom: 16 }}>{calcWeight}kg</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8 }}>
-            {[-10, -5, 5, 10].map(delta => (
-              <button key={delta} onClick={() => setCalcWeight(w => Math.max(20, w + delta))}
-                style={{ padding: "12px 0", background: delta < 0 ? "#1e1e1e" : "#2e2a1a", border: "1px solid " + (delta < 0 ? "#333" : "#e8c96d44"), borderRadius: 10, color: delta < 0 ? "#aaa" : "#e8c96d", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
-                {delta > 0 ? "+" : ""}{delta}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a" }}>
-          <div style={{ marginBottom: 16 }}>
-            <div style={{ fontSize: 13, color: "#555" }}>바벨 무게</div>
-            <div style={{ fontSize: 16, fontWeight: 700, color: "#aaa" }}>20kg (기본 바)</div>
-          </div>
-          <div style={{ fontSize: 13, color: "#555", marginBottom: 10 }}>한쪽 당 원판</div>
-          {getPlateCombo(calcWeight).length === 0 ? (
-            <div style={{ color: "#444", fontSize: 14 }}>원판 없음 (빈 바)</div>
-          ) : (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {getPlateCombo(calcWeight).map(({ kg, count }) => (
-                <div key={kg} style={{ background: "#111", borderRadius: 10, padding: "8px 14px", border: "1px solid #2a2a2a", textAlign: "center" }}>
-                  <div style={{ fontSize: 18, fontWeight: 800, color: "#e8c96d" }}>{kg}kg</div>
-                  <div style={{ fontSize: 12, color: "#555" }}>x {count}개</div>
-                </div>
-              ))}
-            </div>
-          )}
-          <div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid #1e1e1e", fontSize: 13, color: "#555" }}>
-            총 중량: <span style={{ color: "#e8c96d", fontWeight: 700 }}>20 + {getPlateCombo(calcWeight).reduce((a, p) => a + p.kg * p.count * 2, 0)}kg = {calcWeight}kg</span>
-          </div>
-        </div>
-      </div>
-    )}
-
-    {tab === 3 && (
-      <div>
-        <div style={{ background: "linear-gradient(135deg, #1e1a10, #1a1a1a)", borderRadius: 14, padding: 20, border: "1px solid #e8c96d22", marginBottom: 16 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-            <span style={{ fontSize: 28 }}>🏋️</span>
-            <h3 style={{ margin: 0, fontSize: 20, fontWeight: 900, color: "#e8c96d" }}>SetUp</h3>
-          </div>
-          <p style={{ color: "#bbb", fontSize: 14, lineHeight: 1.8, margin: "0 0 10px" }}>
-            SetUp은 근력 운동을 처음 시작하거나 체계적으로 기록하고 싶은 분들을 위한 앱이에요.
-          </p>
-          <p style={{ color: "#bbb", fontSize: 14, lineHeight: 1.8, margin: 0 }}>
-            복잡한 루틴 없이 <span style={{ color: "#e8c96d", fontWeight: 700 }}>6가지 핵심 운동</span>만으로 전신 근력을 균형 있게 키울 수 있어요. 성공하면 자동으로 중량이 올라가고, 실패하면 자동으로 조정돼요.
-          </p>
-          <div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap" }}>
-            {[{ emoji: "📈", text: "자동 중량 증가" }, { emoji: "⏱️", text: "휴식 타이머" }, { emoji: "📊", text: "성장 그래프" }, { emoji: "🧮", text: "원판 계산기" }].map((f, i) => (
-              <div key={i} style={{ background: "#111", borderRadius: 8, padding: "6px 10px", display: "flex", alignItems: "center", gap: 6 }}>
-                <span style={{ fontSize: 14 }}>{f.emoji}</span>
-                <span style={{ fontSize: 11, color: "#888" }}>{f.text}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
-          <h3 style={{ margin: "0 0 14px", fontSize: 16, color: "#e8c96d", fontWeight: 800 }}>이런 분께 추천해요</h3>
-          {[
-            { emoji: "🌱", text: "헬스를 처음 시작하는 분" },
-            { emoji: "📝", text: "운동 기록을 체계적으로 관리하고 싶은 분" },
-            { emoji: "💪", text: "꾸준히 중량을 올려가며 성장하고 싶은 분" },
-            { emoji: "⏰", text: "주 3회, 1시간 이내로 효율적으로 운동하고 싶은 분" },
-          ].map((item, i) => (
-            <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: i < 3 ? "1px solid #222" : "none" }}>
-              <span style={{ fontSize: 20 }}>{item.emoji}</span>
-              <span style={{ fontSize: 13, color: "#aaa" }}>{item.text}</span>
-            </div>
-          ))}
-        </div>
-
-        <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
-          <h3 style={{ margin: "0 0 6px", fontSize: 16, color: "#e8c96d", fontWeight: 800 }}>운동 구성</h3>
-          <p style={{ color: "#555", fontSize: 12, margin: "0 0 14px" }}>A, B 워크아웃을 번갈아 진행해요 · 주 3회</p>
-          <div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
-            {[
-              { title: "워크아웃 A", color: "#6db8e8", exercises: ["하체 운동", "벤치프레스 5x5", "바벨 로우 5x5"] },
-              { title: "워크아웃 B", color: "#6de8a0", exercises: ["하체 운동", "오버헤드 프레스 5x5", "데드리프트 1x5"] },
-            ].map(w => (
-              <div key={w.title} style={{ flex: 1, background: "#111", borderRadius: 10, padding: 14 }}>
-                <div style={{ fontWeight: 700, color: w.color, marginBottom: 10, fontSize: 13 }}>{w.title}</div>
-                {w.exercises.map(e => (
-                  <div key={e} style={{ fontSize: 12, color: "#777", padding: "5px 0", borderBottom: "1px solid #1a1a1a" }}>{e}</div>
-                ))}
-              </div>
-            ))}
-          </div>
-          <div style={{ background: "#111", borderRadius: 10, padding: 12 }}>
-            <div style={{ fontSize: 12, color: "#555", marginBottom: 8 }}>하체 운동은 매일 선택해요</div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <div style={{ flex: 1, background: "#1a1a1a", borderRadius: 8, padding: "8px 12px", textAlign: "center" }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: "#6de8a0" }}>불가리안 스플릿 스쿼트</div>
-                <div style={{ fontSize: 10, color: "#555", marginTop: 3 }}>3세트 x 8회 (단다리)</div>
-              </div>
-              <div style={{ flex: 1, background: "#1a1a1a", borderRadius: 8, padding: "8px 12px", textAlign: "center" }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: "#6db8e8" }}>스쿼트</div>
-                <div style={{ fontSize: 10, color: "#555", marginTop: 3 }}>5세트 x 5회</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
-          <h3 style={{ margin: "0 0 6px", fontSize: 16, color: "#e8c96d", fontWeight: 800 }}>운동별 가이드</h3>
-          <p style={{ color: "#555", fontSize: 12, margin: "0 0 14px" }}>핵심 포인트를 확인하고 자세히 버튼으로 상세 설명을 봐요</p>
-          {[
-            { name: "벤치프레스", emoji: "🏋️", point: "바를 가슴 중앙으로 내리고, 팔꿈치 45~75도 유지", target: "가슴 · 삼두 · 전면 어깨" },
-            { name: "스쿼트", emoji: "🦵", point: "허벅지가 바닥과 평행될 때까지, 무릎은 발끝 방향으로", target: "대퇴사두 · 둔근 · 햄스트링" },
-            { name: "불가리안 스플릿 스쿼트", emoji: "🦵", point: "앞 무릎 90도까지 수직으로, 앞발 뒤꿈치로 밀어내기", target: "대퇴사두 · 둔근 (단다리 집중)" },
-            { name: "바벨 로우", emoji: "💪", point: "상체 45~90도 숙이고, 배꼽 쪽으로 끌어당기기", target: "광배근 · 승모근 · 이두" },
-            { name: "오버헤드 프레스", emoji: "🙌", point: "코어와 둔근 조이고, 바를 수직으로 머리 위로", target: "전면/측면 어깨 · 삼두" },
-            { name: "데드리프트", emoji: "⬆️", point: "척추 중립 유지, 바를 몸에 붙여서 올리기 (1세트만)", target: "허리 · 둔근 · 햄스트링 · 전신" },
-          ].map((ex, i) => (
-            <div key={ex.name} style={{ padding: "14px 0", borderBottom: i < 5 ? "1px solid #222" : "none" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                    <span style={{ fontSize: 16 }}>{ex.emoji}</span>
-                    <span style={{ fontSize: 14, fontWeight: 700, color: EXERCISE_COLORS[ex.name] || "#f0ede8" }}>{ex.name}</span>
-                  </div>
-                  <div style={{ fontSize: 11, color: "#555", marginBottom: 5 }}>{ex.target}</div>
-                  <div style={{ fontSize: 12, color: "#888", lineHeight: 1.6 }}>👉 {ex.point}</div>
-                </div>
-                <button onClick={() => setDescExercise(ex.name)}
-                  style={{ marginLeft: 10, padding: "5px 10px", background: "#222", border: "1px solid #333", borderRadius: 6, color: "#888", fontSize: 10, cursor: "pointer", flexShrink: 0 }}>
-                  자세히
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
-          <h3 style={{ margin: "0 0 14px", fontSize: 16, color: "#e8c96d", fontWeight: 800 }}>중량 시스템</h3>
-          {[
-            { color: "#6de8a0", bg: "#1a2e1a", emoji: "✅", title: "성공하면", desc: "다음 세션에 자동으로 5kg 올라가요." },
-            { color: "#e8c96d", bg: "#2e2a1a", emoji: "⚠️", title: "3회 연속 실패하면", desc: "중량이 자동으로 10% 내려가요. 기록 탭에서 직접 조정도 가능해요." },
-            { color: "#e86d6d", bg: "#2e1a1a", emoji: "😴", title: "정체기가 오면", desc: "수면과 단백질 섭취를 점검해보세요. 체중 1kg당 1.6~2g 단백질, 7~8시간 수면이 목표예요." },
-          ].map(item => (
-            <div key={item.title} style={{ background: item.bg, borderRadius: 10, padding: 14, marginBottom: 10, border: "1px solid " + item.color + "33" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                <span style={{ fontSize: 16 }}>{item.emoji}</span>
-                <span style={{ fontWeight: 700, color: item.color, fontSize: 14 }}>{item.title}</span>
-              </div>
-              <div style={{ color: "#aaa", fontSize: 13, lineHeight: 1.7 }}>{item.desc}</div>
-            </div>
-          ))}
-        </div>
-
-        <div style={{ background: "#1a2e1a", borderRadius: 14, padding: 20, border: "1px solid #2a4a2a", marginBottom: 16 }}>
-          <h3 style={{ margin: "0 0 14px", fontSize: 16, color: "#6de8a0", fontWeight: 800 }}>꼭 기억하세요</h3>
-          {[
-            { emoji: "🔥", title: "웜업은 필수", desc: "부상 방지를 위해 웜업 세트를 절대 건너뛰지 마세요." },
-            { emoji: "😤", title: "가볍게 시작", desc: "처음엔 무조건 가벼운 중량으로 시작해요. 꾸준히 올리는 게 답이에요." },
-            { emoji: "🥩", title: "단백질 + 수면", desc: "체중 1kg당 1.6~2g 단백질, 7~8시간 수면을 지켜주세요." },
-            { emoji: "📌", title: "불가리안 중량 입력 주의", desc: "양손 합산 중량을 입력해요. 한 손에 10kg이면 20kg으로 입력!" },
-          ].map((tip, i) => (
-            <div key={i} style={{ display: "flex", gap: 12, padding: "10px 0", borderBottom: i < 3 ? "1px solid #1a3a1a" : "none" }}>
-              <span style={{ fontSize: 20 }}>{tip.emoji}</span>
-              <div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "#6de8a0", marginBottom: 3 }}>{tip.title}</div>
-                <div style={{ fontSize: 12, color: "#4a8a5a", lineHeight: 1.6 }}>{tip.desc}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    )}
-  </div>
+<div style={{ background: "linear-gradient(135deg, #1a1a1a 0%, #111 100%)", padding: "28px 24px 20px", borderBottom: "1px solid #222" }}>
+<div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+<div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+<span style={{ fontSize: 28 }}>🏋️</span>
+<h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: "#f0ede8" }}>SetUp</h1>
 </div>
-```
+<div style={{ display: "flex", gap: 6 }}>
+{isAdmin && <button onClick={() => setShowAdmin(true)} style={{ padding: "6px 10px", background: "#2e2a1a", border: "1px solid #e8c96d44", borderRadius: 8, color: "#e8c96d", fontSize: 11, cursor: "pointer" }}>관리</button>}
+<button onClick={onLogout} style={{ padding: "6px 10px", background: "#1e1e1e", border: "1px solid #333", borderRadius: 8, color: "#666", fontSize: 11, cursor: "pointer" }}>로그아웃</button>
+</div>
+</div>
+{/* 프로필 영역 - 클릭하면 편집 */}
+<button onClick={() => setShowProfile(true)} style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12, marginTop: 6, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+<div style={{ width: 22, height: 22, borderRadius: "50%", background: "#e8c96d22", border: "1px solid #e8c96d44", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: "#e8c96d" }}>{uid[0].toUpperCase()}</div>
+<span style={{ fontSize: 12, color: "#888" }}>{uid}</span>
+{isAdmin && <span style={{ fontSize: 10, color: "#e8c96d", background: "#2e2a1a", padding: "1px 6px", borderRadius: 20 }}>관리자</span>}
+<span style={{ fontSize: 10, color: "#444", marginLeft: 2 }}>✎</span>
+</button>
+<div style={{ display: "flex", gap: 16 }}>
+{[{ label: "총 세션", val: totalSessions }, { label: "연속", val: streak + "회" }, { label: "다음", val: nextWorkout }].map(s => (
+<div key={s.label} style={{ background: "#1e1e1e", borderRadius: 10, padding: "8px 14px", flex: 1, textAlign: "center" }}>
+<div style={{ fontSize: 18, fontWeight: 700, color: "#e8c96d" }}>{s.val}</div>
+<div style={{ fontSize: 11, color: "#666", marginTop: 2 }}>{s.label}</div>
+</div>
+))}
+</div>
+</div>
 
+<div style={{ display: "flex", background: "#161616", borderBottom: "1px solid #222" }}>
+{TABS.map((t, i) => (
+<button key={t} onClick={() => setTab(i)} style={{ flex: 1, padding: "14px 4px", background: "none", border: "none", color: tab === i ? "#e8c96d" : "#555", fontWeight: tab === i ? 700 : 400, fontSize: 12, cursor: "pointer", borderBottom: tab === i ? "2px solid #e8c96d" : "2px solid transparent" }}>
+{t}
+</button>
+))}
+</div>
+
+<div style={{ padding: "20px 16px", overflowX: "hidden" }}>
+{tab === 0 && (
+<div>
+{!session ? (
+<div>
+{/* 운동 카드 - 테두리 강화 */}
+<div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, marginBottom: 16, border: "2px solid #2e2e2e" }}>
+<div style={{ fontSize: 13, color: "#888", marginBottom: 6 }}>다음 운동</div>
+<div style={{ fontSize: 26, fontWeight: 800, color: "#e8c96d", marginBottom: 16 }}>워크아웃 {nextWorkout}</div>
+{/* 운동 목록 사각형 박스 */}
+<div style={{ border: "1.5px solid #333", borderRadius: 12, overflow: "hidden" }}>
+{getWorkouts(lowerChoice || "bulgarian")[nextWorkout].map((ex, idx, arr) => {
+const w = weights[ex.name] || DEFAULT_WEIGHTS[ex.name];
+const warmups = getWarmupSets(w, ex.isBulgarian);
+return (
+<div key={ex.name} style={{ padding: "12px 14px", borderBottom: idx < arr.length - 1 ? "1px solid #252525" : "none", background: "#111" }}>
+<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+<span style={{ fontSize: 15, fontWeight: 600 }}>{ex.name}</span>
+<div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+<span style={{ fontSize: 13, color: "#aaa" }}>{ex.sets}x{ex.reps} <span style={{ color: "#e8c96d", fontWeight: 700 }}>{w}kg</span></span>
+<button onClick={() => setDescExercise(ex.name)}
+style={{ padding: "3px 8px", background: "#222", border: "1px solid #333", borderRadius: 6, color: "#888", fontSize: 10, cursor: "pointer" }}>
+자세
+</button>
+</div>
+</div>
+{ex.note && <div style={{ fontSize: 11, color: "#6db8e8", marginTop: 3 }}>💡 {ex.note}</div>}
+<div style={{ fontSize: 11, color: "#444", marginTop: 4 }}>
+웜업: {warmups.map(ws => ws.weight === 0 ? "맨몸" : ws.weight + "kg").join(" → ")} → 본세트
+</div>
+</div>
+);
+})}
+</div>
+</div>
+{lowerChoice === null ? (
+<div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a" }}>
+<div style={{ fontSize: 14, color: "#888", marginBottom: 14, textAlign: "center" }}>오늘 하체 운동을 선택하세요</div>
+<div style={{ display: "flex", gap: 10 }}>
+<button onClick={() => setLowerChoice("bulgarian")}
+style={{ flex: 1, padding: "16px 8px", background: "#111", border: "2px solid #2a2a2a", borderRadius: 12, color: "#f0ede8", fontSize: 13, fontWeight: 600, cursor: "pointer", lineHeight: 1.6, textAlign: "center" }}>
+불가리안 스플릿 스쿼트
+</button>
+<button onClick={() => setLowerChoice("squat")}
+style={{ flex: 1, padding: "16px 8px", background: "#111", border: "2px solid #2a2a2a", borderRadius: 12, color: "#f0ede8", fontSize: 13, fontWeight: 600, cursor: "pointer", lineHeight: 1.6, textAlign: "center" }}>
+스쿼트
+</button>
+</div>
+</div>
+) : (
+<div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+<button onClick={() => startSession(lowerChoice)}
+style={{ width: "100%", padding: "16px", background: "linear-gradient(135deg, #e8c96d, #d4a843)", border: "none", borderRadius: 12, fontSize: 16, fontWeight: 800, color: "#111", cursor: "pointer" }}>
+💪 운동 시작 ({lowerChoice === "bulgarian" ? "불가리안" : "스쿼트"})
+</button>
+<button onClick={() => setLowerChoice(null)}
+style={{ width: "100%", padding: "13px", background: "none", border: "1px solid #2a2a2a", borderRadius: 12, fontSize: 14, color: "#555", cursor: "pointer" }}>
+← 하체 운동 다시 선택
+</button>
+</div>
+)}
+</div>
+) : done ? (
+<div style={{ textAlign: "center", padding: "40px 0" }}>
+<div style={{ fontSize: 60, marginBottom: 16 }}>🎉</div>
+<h2 style={{ color: "#e8c96d", fontSize: 24, marginBottom: 8 }}>운동 완료!</h2>
+<p style={{ color: "#888", marginBottom: 24 }}>훌륭해요! 다음 세션이 기다리고 있습니다.</p>
+<div style={{ background: "#1a1a1a", borderRadius: 14, padding: 16, marginBottom: 20, textAlign: "left" }}>
+{session.exercises.map((ex, i) => {
+const success = isMainAllDone(i, ex.sets);
+return (
+<div key={ex.name} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid #222" }}>
+<span>{ex.name}</span>
+<span style={{ color: success ? "#6de8a0" : "#e86d6d" }}>{success ? "성공" : "실패"}</span>
+</div>
+);
+})}
+</div>
+<button onClick={() => setSession(null)} style={{ padding: "14px 32px", background: "#222", border: "1px solid #444", borderRadius: 12, color: "#f0ede8", fontSize: 15, cursor: "pointer" }}>홈으로</button>
+</div>
+) : (
+<div>
+<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+<h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>워크아웃 {session.type}</h2>
+<span style={{ fontSize: 12, color: "#666" }}>{formatDate(session.date)}</span>
+</div>
+{session.exercises.map((ex, exIdx) => {
+const warmupSets = getWarmupSets(ex.weight, ex.isBulgarian);
+const warmupOpen = showWarmup[exIdx] !== false;
+const warmupDone = isWarmupAllDone(exIdx, warmupSets.length);
+const mainDone = isMainAllDone(exIdx, ex.sets);
+return (
+<div key={ex.name} style={{ background: mainDone ? "#1a2a1a" : "#1a1a1a", borderRadius: 14, padding: 16, marginBottom: 14, border: "1px solid " + (mainDone ? "#2a4a2a" : "#2a2a2a") }}>
+<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+<div>
+<div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+<div style={{ fontWeight: 700, fontSize: 16 }}>{ex.name}</div>
+<button onClick={() => setDescExercise(ex.name)}
+style={{ padding: "2px 7px", background: "#222", border: "1px solid #333", borderRadius: 6, color: "#888", fontSize: 10, cursor: "pointer" }}>
+자세
+</button>
+</div>
+<div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>
+본세트 {ex.sets}x{ex.reps} <span style={{ color: "#e8c96d" }}>{ex.weight}kg</span>
+{ex.isBulgarian && <span style={{ color: "#6db8e8" }}> (한 손 {ex.weight / 2}kg)</span>}
+</div>
+</div>
+{mainDone && <span style={{ color: "#6de8a0", fontSize: 22 }}>✓</span>}
+</div>
+<div style={{ marginBottom: 12 }}>
+<button onClick={() => setShowWarmup(prev => Object.assign({}, prev, { [exIdx]: !warmupOpen }))}
+style={{ width: "100%", background: warmupDone ? "#1a2e1a" : "#141414", border: "1px solid " + (warmupDone ? "#2a4a2a" : "#252525"), borderRadius: warmupOpen ? "10px 10px 0 0" : "10px", padding: "9px 12px", color: warmupDone ? "#6de8a0" : "#777", fontSize: 13, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+<span>웜업 세트 {warmupDone ? "완료" : "(" + warmupSets.length + "세트)"}</span>
+<span style={{ fontSize: 11 }}>{warmupOpen ? "접기" : "펼치기"}</span>
+</button>
+{warmupOpen && (
+<div style={{ background: "#111", borderRadius: "0 0 10px 10px", padding: "8px 12px", border: "1px solid #252525", borderTop: "none" }}>
+{warmupSets.map((ws, wi) => {
+const isDone = completedSets["w-" + exIdx + "-" + wi];
+return (
+<div key={wi} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 0", borderBottom: wi < warmupSets.length - 1 ? "1px solid #1a1a1a" : "none" }}>
+<div>
+<span style={{ fontSize: 13, color: isDone ? "#6de8a0" : "#bbb", fontWeight: 500 }}>{ws.label}</span>
+<span style={{ fontSize: 12, color: "#555", marginLeft: 8 }}>{ws.weight === 0 ? "맨몸" : ws.weight + "kg"} x {ws.reps}회</span>
+{ex.isBulgarian && ws.weight > 0 && <span style={{ fontSize: 11, color: "#6db8e8", marginLeft: 4 }}>(한 손 {ws.weight / 2}kg)</span>}
+</div>
+<button onClick={() => toggleSet("w", exIdx, wi)}
+style={{ width: 34, height: 34, borderRadius: 8, border: "2px solid " + (isDone ? "#6de8a0" : "#2a2a2a"), background: isDone ? "#1e3a2a" : "#1a1a1a", color: isDone ? "#6de8a0" : "#444", fontSize: 15, cursor: "pointer" }}>
+{isDone ? "✓" : "○"}
+</button>
+</div>
+);
+})}
+<div style={{ fontSize: 11, color: "#555", marginTop: 8, paddingTop: 8, borderTop: "1px solid #1a1a1a", textAlign: "center" }}>웜업 세트 사이에는 휴식 없이 바로 진행하세요</div>
+</div>
+)}
+</div>
+<div>
+<div style={{ fontSize: 12, color: "#666", marginBottom: 8 }}>
+본 세트 {ex.weight}kg x {ex.reps}회
+{ex.isBulgarian && <span style={{ color: "#6db8e8" }}> 한 손 {ex.weight / 2}kg</span>}
+</div>
+<div style={{ display: "flex", gap: 8 }}>
+{Array.from({ length: ex.sets }, (_, i) => {
+const isDone = completedSets["m-" + exIdx + "-" + i];
+const diff = difficulty[exIdx + "-" + i];
+const diffOpt = DIFFICULTY_OPTIONS.find(d => d.key === diff);
+const isNextSet = !isDone && Array.from({ length: i }, (_, j) => completedSets["m-" + exIdx + "-" + j]).every(Boolean);
+return (
+<div key={i} style={{ flex: 1 }}>
+<button onClick={() => { if (!isDone) toggleSet("m", exIdx, i); }}
+style={{ width: "100%", aspectRatio: "1", borderRadius: 10, border: "2px solid " + (isDone ? (diffOpt ? diffOpt.color : "#6de8a0") : isNextSet ? "#555" : "#2a2a2a"), background: isDone ? (diffOpt ? diffOpt.bg : "#1e3a2a") : "#111", color: isDone ? (diffOpt ? diffOpt.color : "#6de8a0") : isNextSet ? "#888" : "#444", fontSize: isDone ? 16 : 13, fontWeight: 700, cursor: isDone ? "default" : "pointer" }}>
+{isDone ? (diffOpt ? diffOpt.emoji : "✓") : i + 1}
+</button>
+</div>
+);
+})}
+</div>
+{Array.from({ length: ex.sets }, (_, i) => {
+const isDone = completedSets["m-" + exIdx + "-" + i];
+const hasDiff = difficulty[exIdx + "-" + i];
+const isLastSet = i === ex.sets - 1;
+if (!isDone || hasDiff) return null;
+return (
+<div key={i} style={{ marginTop: 10, background: "#161616", borderRadius: 10, padding: "12px", border: "1px solid #2a2a2a" }}>
+<div style={{ fontSize: 12, color: "#888", marginBottom: 8, textAlign: "center" }}>
+{i + 1}세트 완료! {isLastSet ? "마지막 세트예요" : "난이도는?"}
+</div>
+<div style={{ display: "flex", gap: 6 }}>
+{DIFFICULTY_OPTIONS.map(opt => (
+<button key={opt.key}
+onClick={() => isLastSet ? setDifficulty(prev => Object.assign({}, prev, { [exIdx + "-" + i]: opt.key })) : startRest(exIdx, i, opt.seconds, opt.key)}
+style={{ flex: 1, padding: "8px 4px", background: opt.bg, border: "1px solid " + opt.color + "33", borderRadius: 8, color: opt.color, fontSize: 11, fontWeight: 600, cursor: "pointer", textAlign: "center", lineHeight: 1.4 }}>
+{opt.emoji}<br />{opt.label}{!isLastSet && <><br /><span style={{ fontSize: 10, opacity: 0.7 }}>{opt.seconds}초</span></>}
+</button>
+))}
+</div>
+</div>
+);
+})}
+{restTimer && restTimer.exIdx === exIdx && (
+<div style={{ marginTop: 10, background: "#111", borderRadius: 10, padding: "14px", border: "1px solid #2a2a2a", textAlign: "center" }}>
+<div style={{ fontSize: 11, color: "#666", marginBottom: 4 }}>휴식 중...</div>
+<div style={{ fontSize: 36, fontWeight: 800, color: restTimer.remaining <= 10 ? "#e86d6d" : "#e8c96d", letterSpacing: 2, marginBottom: 8 }}>
+{formatTime(restTimer.remaining)}
+</div>
+<div style={{ height: 4, background: "#222", borderRadius: 2, marginBottom: 10, overflow: "hidden" }}>
+<div style={{ height: "100%", width: (restTimer.remaining / restTimer.seconds * 100) + "%", background: restTimer.remaining <= 10 ? "#e86d6d" : "#e8c96d", borderRadius: 2, transition: "width 1s linear" }} />
+</div>
+{restTimer.remaining === 0 ? (
+<div style={{ color: "#6de8a0", fontWeight: 700, fontSize: 14 }}>휴식 완료! 다음 세트 시작하세요</div>
+) : (
+<button onClick={skipRest} style={{ padding: "7px 20px", background: "#1e1e1e", border: "1px solid #333", borderRadius: 8, color: "#666", fontSize: 12, cursor: "pointer" }}>건너뛰기</button>
+)}
+</div>
+)}
+</div>
+</div>
+);
+})}
+<button onClick={finishSession} style={{ width: "100%", padding: "15px", background: "linear-gradient(135deg, #e8c96d, #d4a843)", border: "none", borderRadius: 12, fontSize: 15, fontWeight: 800, color: "#111", cursor: "pointer", marginTop: 8 }}>
+운동 완료 &amp; 저장
+</button>
+<button onClick={() => setSession(null)} style={{ width: "100%", padding: "12px", background: "none", border: "1px solid #2a2a2a", borderRadius: 12, fontSize: 14, color: "#555", cursor: "pointer", marginTop: 8 }}>
+취소
+</button>
+</div>
+)}
+</div>
+)}
+
+{tab === 1 && (
+
+<div>
+<div style={{ background: "#1a1a1a", borderRadius: 14, padding: 16, border: "1px solid #2a2a2a", marginBottom: 20 }}>
+<div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+<h3 style={{ margin: 0, fontSize: 15, color: "#f0ede8", fontWeight: 700 }}>중량 성장 그래프</h3>
+<span style={{ fontSize: 11, color: "#444" }}>● 성공 ● 실패</span>
+</div>
+<div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14 }}>
+{EXERCISE_NAMES.map(name => (
+<button key={name} onClick={() => setSelectedExercise(name)}
+style={{ padding: "5px 10px", borderRadius: 20, border: "1px solid " + (selectedExercise === name ? EXERCISE_COLORS[name] : "#2a2a2a"), background: selectedExercise === name ? EXERCISE_COLORS[name] + "22" : "none", color: selectedExercise === name ? EXERCISE_COLORS[name] : "#555", fontSize: 11, cursor: "pointer", fontWeight: selectedExercise === name ? 700 : 400 }}>
+{name}
+</button>
+))}
+</div>
+<div style={{ background: "#111", borderRadius: 10, padding: "12px 8px" }}>
+<WeightGraph history={history} exerciseName={selectedExercise} />
+</div>
+<div style={{ display: "flex", justifyContent: "space-between", marginTop: 10 }}>
+<span style={{ fontSize: 11, color: "#444" }}>현재: <span style={{ color: EXERCISE_COLORS[selectedExercise], fontWeight: 700 }}>{weights[selectedExercise] || "-"}kg</span></span>
+<span style={{ fontSize: 11, color: "#444" }}>최고: <span style={{ color: "#e8c96d", fontWeight: 700 }}>
+{(() => {
+const vals = history.flatMap(h => h.results.filter(r => r.name === selectedExercise).map(r => r.weight));
+return vals.length ? Math.max(...vals) + "kg" : "-";
+})()}
+</span></span>
+</div>
+</div>
+<h3 style={{ margin: "0 0 16px", fontSize: 16, color: "#888", fontWeight: 500 }}>현재 중량</h3>
+<div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 24 }}>
+{Object.entries(weights).map(([name, w]) => (
+<div key={name} style={{ background: "#1a1a1a", borderRadius: 12, padding: "12px 14px", border: "1px solid #2a2a2a" }}>
+<div style={{ fontSize: 11, color: "#555", marginBottom: 4 }}>{name}</div>
+<div style={{ fontSize: 20, fontWeight: 800, color: "#e8c96d" }}>{w}kg</div>
+{name === "불가리안 스플릿 스쿼트" && <div style={{ fontSize: 11, color: "#6db8e8", marginTop: 2 }}>한 손 {w / 2}kg</div>}
+{failCounts[name] > 0 && <div style={{ fontSize: 11, color: "#e87a6d", marginTop: 3 }}>실패 {failCounts[name]}/3</div>}
+</div>
+))}
+</div>
+<h3 style={{ margin: "0 0 12px", fontSize: 16, color: "#888", fontWeight: 500 }}>최근 세션</h3>
+{history.length === 0 ? (
+<div style={{ textAlign: "center", color: "#333", padding: "40px 0" }}>아직 기록이 없습니다.</div>
+) : history.slice(0, 10).map((h, i) => (
+<div key={i} style={{ background: "#1a1a1a", borderRadius: 12, padding: 14, marginBottom: 10, border: "1px solid #2a2a2a" }}>
+<div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+<span style={{ fontWeight: 700, color: "#e8c96d" }}>워크아웃 {h.type}</span>
+<span style={{ fontSize: 12, color: "#555" }}>{formatDate(h.date)}</span>
+</div>
+<div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+{h.results.map(r => (
+<span key={r.name} style={{ fontSize: 12, padding: "3px 8px", borderRadius: 20, background: r.success ? "#1e3a2a" : "#3a1e1e", color: r.success ? "#6de8a0" : "#e86d6d" }}>
+{r.name} {r.weight}kg {r.success ? "✓" : "✗"}
+</span>
+))}
+</div>
+</div>
+))}
+<div style={{ marginTop: 32, paddingTop: 20, borderTop: "1px solid #1e1e1e" }}>
+<button onClick={() => setShowWeightEdit(true)} style={{ width: "100%", padding: "13px", background: "none", border: "1px solid #2a4a2a", borderRadius: 12, color: "#6de8a0", fontSize: 14, cursor: "pointer", marginBottom: 10 }}>
+중량 설정 변경
+</button>
+{!resetConfirm ? (
+<button onClick={() => setResetConfirm(true)} style={{ width: "100%", padding: "13px", background: "none", border: "1px solid #3a2020", borderRadius: 12, color: "#e87a6d", fontSize: 14, cursor: "pointer" }}>
+내 기록 초기화
+</button>
+) : (
+<div style={{ background: "#1e1010", borderRadius: 12, padding: 16, border: "1px solid #4a2020" }}>
+<p style={{ color: "#e87a6d", fontSize: 14, margin: "0 0 12px", textAlign: "center" }}>모든 기록과 중량이 초기화됩니다. 정말 리셋할까요?</p>
+<div style={{ display: "flex", gap: 8 }}>
+<button onClick={() => setResetConfirm(false)} style={{ flex: 1, padding: "11px", background: "#222", border: "1px solid #333", borderRadius: 10, color: "#aaa", fontSize: 14, cursor: "pointer" }}>취소</button>
+<button onClick={handleReset} style={{ flex: 1, padding: "11px", background: "#3a1010", border: "1px solid #5a2020", borderRadius: 10, color: "#e87a6d", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>초기화</button>
+</div>
+</div>
+)}
+</div>
+</div>
+)}
+
+{tab === 2 && (
+
+<div>
+<h3 style={{ margin: "0 0 16px", fontSize: 16, color: "#888", fontWeight: 500 }}>바벨 원판 계산기</h3>
+<div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
+<label style={{ fontSize: 14, color: "#888", display: "block", marginBottom: 12 }}>목표 중량</label>
+<div style={{ textAlign: "center", fontSize: 40, fontWeight: 800, color: "#e8c96d", marginBottom: 16 }}>{calcWeight}kg</div>
+<div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8 }}>
+{[-10, -5, 5, 10].map(delta => (
+<button key={delta} onClick={() => setCalcWeight(w => Math.max(20, w + delta))}
+style={{ padding: "12px 0", background: delta < 0 ? "#1e1e1e" : "#2e2a1a", border: "1px solid " + (delta < 0 ? "#333" : "#e8c96d44"), borderRadius: 10, color: delta < 0 ? "#aaa" : "#e8c96d", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>
+{delta > 0 ? "+" : ""}{delta}
+</button>
+))}
+</div>
+</div>
+<div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a" }}>
+<div style={{ marginBottom: 16 }}>
+<div style={{ fontSize: 13, color: "#555" }}>바벨 무게</div>
+<div style={{ fontSize: 16, fontWeight: 700, color: "#aaa" }}>20kg (기본 바)</div>
+</div>
+<div style={{ fontSize: 13, color: "#555", marginBottom: 10 }}>한쪽 당 원판</div>
+{getPlateCombo(calcWeight).length === 0 ? (
+<div style={{ color: "#444", fontSize: 14 }}>원판 없음 (빈 바)</div>
+) : (
+<div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+{getPlateCombo(calcWeight).map(({ kg, count }) => (
+<div key={kg} style={{ background: "#111", borderRadius: 10, padding: "8px 14px", border: "1px solid #2a2a2a", textAlign: "center" }}>
+<div style={{ fontSize: 18, fontWeight: 800, color: "#e8c96d" }}>{kg}kg</div>
+<div style={{ fontSize: 12, color: "#555" }}>x {count}개</div>
+</div>
+))}
+</div>
+)}
+<div style={{ marginTop: 16, paddingTop: 14, borderTop: "1px solid #1e1e1e", fontSize: 13, color: "#555" }}>
+총 중량: <span style={{ color: "#e8c96d", fontWeight: 700 }}>20 + {getPlateCombo(calcWeight).reduce((a, p) => a + p.kg * p.count * 2, 0)}kg = {calcWeight}kg</span>
+</div>
+</div>
+</div>
+)}
+
+{tab === 3 && (
+
+<div>
+<div style={{ background: "linear-gradient(135deg, #1e1a10, #1a1a1a)", borderRadius: 14, padding: 20, border: "1px solid #e8c96d22", marginBottom: 16 }}>
+<div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+<span style={{ fontSize: 28 }}>🏋️</span>
+<h3 style={{ margin: 0, fontSize: 20, fontWeight: 900, color: "#e8c96d" }}>SetUp</h3>
+</div>
+<p style={{ color: "#bbb", fontSize: 14, lineHeight: 1.8, margin: "0 0 10px" }}>
+SetUp은 근력 운동을 처음 시작하거나 체계적으로 기록하고 싶은 분들을 위한 앱이에요.
+</p>
+<p style={{ color: "#bbb", fontSize: 14, lineHeight: 1.8, margin: 0 }}>
+복잡한 루틴 없이 <span style={{ color: "#e8c96d", fontWeight: 700 }}>6가지 핵심 운동</span>만으로 전신 근력을 균형 있게 키울 수 있어요. 성공하면 자동으로 중량이 올라가고, 실패하면 자동으로 조정돼요.
+</p>
+<div style={{ display: "flex", gap: 8, marginTop: 16, flexWrap: "wrap" }}>
+{[{ emoji: "📈", text: "자동 중량 증가" }, { emoji: "⏱️", text: "휴식 타이머" }, { emoji: "📊", text: "성장 그래프" }, { emoji: "🧮", text: "원판 계산기" }].map((f, i) => (
+<div key={i} style={{ background: "#111", borderRadius: 8, padding: "6px 10px", display: "flex", alignItems: "center", gap: 6 }}>
+<span style={{ fontSize: 14 }}>{f.emoji}</span>
+<span style={{ fontSize: 11, color: "#888" }}>{f.text}</span>
+</div>
+))}
+</div>
+</div>
+
+{/* StrongLifts 5x5 설명 섹션 */}
+
+<div style={{ background: "linear-gradient(135deg, #0f1a2e, #1a1a1a)", borderRadius: 14, padding: 20, border: "1px solid #6db8e822", marginBottom: 16 }}>
+<div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+<span style={{ fontSize: 22 }}>💡</span>
+<h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: "#6db8e8" }}>StrongLifts 5x5 기반 프로그램</h3>
+</div>
+<p style={{ color: "#bbb", fontSize: 13, lineHeight: 1.8, margin: "0 0 12px" }}>
+SetUp은 전 세계적으로 검증된 <span style={{ color: "#6db8e8", fontWeight: 700 }}>StrongLifts 5x5</span> 프로그램을 바탕으로 만들어졌어요.
+</p>
+<div style={{ background: "#111", borderRadius: 10, padding: 14, marginBottom: 12 }}>
+<div style={{ fontSize: 13, fontWeight: 700, color: "#6db8e8", marginBottom: 8 }}>StrongLifts 5x5란?</div>
+<p style={{ color: "#888", fontSize: 12, lineHeight: 1.8, margin: 0 }}>
+5가지 핵심 바벨 운동(스쿼트, 벤치프레스, 바벨 로우, 오버헤드 프레스, 데드리프트)을 5세트 5회씩 수행하며, 매 세션마다 중량을 조금씩 올려가는 선형 점진 과부하 프로그램이에요. 초보자부터 중급자까지 전 세계 수백만 명이 사용해온 방법이에요.
+</p>
+</div>
+<div style={{ background: "#111", borderRadius: 10, padding: 14, border: "1px solid #6de8a022" }}>
+<div style={{ fontSize: 13, fontWeight: 700, color: "#6de8a0", marginBottom: 8 }}>SetUp만의 차이점</div>
+<div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+{[
+{ emoji: "🦵", text: "스쿼트 랙이 없어도 OK — 불가리안 스플릿 스쿼트로 대체 가능해요" },
+{ emoji: "📱", text: "매 세션 하체 운동을 자유롭게 선택할 수 있어요" },
+{ emoji: "📊", text: "중량 성장 그래프와 자동 원판 계산기가 내장돼 있어요" },
+].map((item, i) => (
+<div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+<span style={{ fontSize: 14, flexShrink: 0 }}>{item.emoji}</span>
+<span style={{ fontSize: 12, color: "#888", lineHeight: 1.7 }}>{item.text}</span>
+</div>
+))}
+</div>
+</div>
+</div>
+
+<div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
+<h3 style={{ margin: "0 0 14px", fontSize: 16, color: "#e8c96d", fontWeight: 800 }}>이런 분께 추천해요</h3>
+{[
+{ emoji: "🌱", text: "헬스를 처음 시작하는 분" },
+{ emoji: "📝", text: "운동 기록을 체계적으로 관리하고 싶은 분" },
+{ emoji: "💪", text: "꾸준히 중량을 올려가며 성장하고 싶은 분" },
+{ emoji: "⏰", text: "주 3회, 1시간 이내로 효율적으로 운동하고 싶은 분" },
+].map((item, i) => (
+<div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: i < 3 ? "1px solid #222" : "none" }}>
+<span style={{ fontSize: 20 }}>{item.emoji}</span>
+<span style={{ fontSize: 13, color: "#aaa" }}>{item.text}</span>
+</div>
+))}
+</div>
+
+<div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
+<h3 style={{ margin: "0 0 6px", fontSize: 16, color: "#e8c96d", fontWeight: 800 }}>운동 구성</h3>
+<p style={{ color: "#555", fontSize: 12, margin: "0 0 14px" }}>A, B 워크아웃을 번갈아 진행해요 · 주 3회</p>
+<div style={{ display: "flex", gap: 10, marginBottom: 12 }}>
+{[
+{ title: "워크아웃 A", color: "#6db8e8", exercises: ["하체 운동", "벤치프레스 5x5", "바벨 로우 5x5"] },
+{ title: "워크아웃 B", color: "#6de8a0", exercises: ["하체 운동", "오버헤드 프레스 5x5", "데드리프트 1x5"] },
+].map(w => (
+<div key={w.title} style={{ flex: 1, background: "#111", borderRadius: 10, padding: 14 }}>
+<div style={{ fontWeight: 700, color: w.color, marginBottom: 10, fontSize: 13 }}>{w.title}</div>
+{w.exercises.map(e => (
+<div key={e} style={{ fontSize: 12, color: "#777", padding: "5px 0", borderBottom: "1px solid #1a1a1a" }}>{e}</div>
+))}
+</div>
+))}
+</div>
+<div style={{ background: "#111", borderRadius: 10, padding: 12 }}>
+<div style={{ fontSize: 12, color: "#555", marginBottom: 8 }}>하체 운동은 매일 선택해요</div>
+<div style={{ display: "flex", gap: 8 }}>
+<div style={{ flex: 1, background: "#1a1a1a", borderRadius: 8, padding: "8px 12px", textAlign: "center" }}>
+<div style={{ fontSize: 12, fontWeight: 700, color: "#6de8a0" }}>불가리안 스플릿 스쿼트</div>
+<div style={{ fontSize: 10, color: "#555", marginTop: 3 }}>3세트 x 8회 (단다리)</div>
+</div>
+<div style={{ flex: 1, background: "#1a1a1a", borderRadius: 8, padding: "8px 12px", textAlign: "center" }}>
+<div style={{ fontSize: 12, fontWeight: 700, color: "#6db8e8" }}>스쿼트</div>
+<div style={{ fontSize: 10, color: "#555", marginTop: 3 }}>5세트 x 5회</div>
+</div>
+</div>
+</div>
+</div>
+
+<div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
+<h3 style={{ margin: "0 0 6px", fontSize: 16, color: "#e8c96d", fontWeight: 800 }}>운동별 가이드</h3>
+<p style={{ color: "#555", fontSize: 12, margin: "0 0 14px" }}>핵심 포인트를 확인하고 자세히 버튼으로 상세 설명을 봐요</p>
+{[
+{ name: "벤치프레스", emoji: "🏋️", point: "바를 가슴 중앙으로 내리고, 팔꿈치 45~75도 유지", target: "가슴 · 삼두 · 전면 어깨" },
+{ name: "스쿼트", emoji: "🦵", point: "허벅지가 바닥과 평행될 때까지, 무릎은 발끝 방향으로", target: "대퇴사두 · 둔근 · 햄스트링" },
+{ name: "불가리안 스플릿 스쿼트", emoji: "🦵", point: "앞 무릎 90도까지 수직으로, 앞발 뒤꿈치로 밀어내기", target: "대퇴사두 · 둔근 (단다리 집중)" },
+{ name: "바벨 로우", emoji: "💪", point: "상체 45~90도 숙이고, 배꼽 쪽으로 끌어당기기", target: "광배근 · 승모근 · 이두" },
+{ name: "오버헤드 프레스", emoji: "🙌", point: "코어와 둔근 조이고, 바를 수직으로 머리 위로", target: "전면/측면 어깨 · 삼두" },
+{ name: "데드리프트", emoji: "⬆️", point: "척추 중립 유지, 바를 몸에 붙여서 올리기 (1세트만)", target: "허리 · 둔근 · 햄스트링 · 전신" },
+].map((ex, i) => (
+<div key={ex.name} style={{ padding: "14px 0", borderBottom: i < 5 ? "1px solid #222" : "none" }}>
+<div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+<div style={{ flex: 1 }}>
+<div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+<span style={{ fontSize: 16 }}>{ex.emoji}</span>
+<span style={{ fontSize: 14, fontWeight: 700, color: EXERCISE_COLORS[ex.name] || "#f0ede8" }}>{ex.name}</span>
+</div>
+<div style={{ fontSize: 11, color: "#555", marginBottom: 5 }}>{ex.target}</div>
+<div style={{ fontSize: 12, color: "#888", lineHeight: 1.6 }}>👉 {ex.point}</div>
+</div>
+<button onClick={() => setDescExercise(ex.name)}
+style={{ marginLeft: 10, padding: "5px 10px", background: "#222", border: "1px solid #333", borderRadius: 6, color: "#888", fontSize: 10, cursor: "pointer", flexShrink: 0 }}>
+자세히
+</button>
+</div>
+</div>
+))}
+</div>
+
+<div style={{ background: "#1a1a1a", borderRadius: 14, padding: 20, border: "1px solid #2a2a2a", marginBottom: 16 }}>
+<h3 style={{ margin: "0 0 14px", fontSize: 16, color: "#e8c96d", fontWeight: 800 }}>중량 시스템</h3>
+{[
+{ color: "#6de8a0", bg: "#1a2e1a", emoji: "✅", title: "성공하면", desc: "다음 세션에 자동으로 5kg 올라가요." },
+{ color: "#e8c96d", bg: "#2e2a1a", emoji: "⚠️", title: "3회 연속 실패하면", desc: "중량이 자동으로 10% 내려가요. 기록 탭에서 직접 조정도 가능해요." },
+{ color: "#e86d6d", bg: "#2e1a1a", emoji: "😴", title: "정체기가 오면", desc: "수면과 단백질 섭취를 점검해보세요. 체중 1kg당 1.6~2g 단백질, 7~8시간 수면이 목표예요." },
+].map(item => (
+<div key={item.title} style={{ background: item.bg, borderRadius: 10, padding: 14, marginBottom: 10, border: "1px solid " + item.color + "33" }}>
+<div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+<span style={{ fontSize: 16 }}>{item.emoji}</span>
+<span style={{ fontWeight: 700, color: item.color, fontSize: 14 }}>{item.title}</span>
+</div>
+<div style={{ color: "#aaa", fontSize: 13, lineHeight: 1.7 }}>{item.desc}</div>
+</div>
+))}
+</div>
+
+<div style={{ background: "#1a2e1a", borderRadius: 14, padding: 20, border: "1px solid #2a4a2a", marginBottom: 16 }}>
+<h3 style={{ margin: "0 0 14px", fontSize: 16, color: "#6de8a0", fontWeight: 800 }}>꼭 기억하세요</h3>
+{[
+{ emoji: "🔥", title: "웜업은 필수", desc: "부상 방지를 위해 웜업 세트를 절대 건너뛰지 마세요." },
+{ emoji: "😤", title: "가볍게 시작", desc: "처음엔 무조건 가벼운 중량으로 시작해요. 꾸준히 올리는 게 답이에요." },
+{ emoji: "🥩", title: "단백질 + 수면", desc: "체중 1kg당 1.6~2g 단백질, 7~8시간 수면을 지켜주세요." },
+{ emoji: "📌", title: "불가리안 중량 입력 주의", desc: "양손 합산 중량을 입력해요. 한 손에 10kg이면 20kg으로 입력!" },
+].map((tip, i) => (
+<div key={i} style={{ display: "flex", gap: 12, padding: "10px 0", borderBottom: i < 3 ? "1px solid #1a3a1a" : "none" }}>
+<span style={{ fontSize: 20 }}>{tip.emoji}</span>
+<div>
+<div style={{ fontSize: 13, fontWeight: 700, color: "#6de8a0", marginBottom: 3 }}>{tip.title}</div>
+<div style={{ fontSize: 12, color: "#4a8a5a", lineHeight: 1.6 }}>{tip.desc}</div>
+</div>
+</div>
+))}
+</div>
+</div>
+)}
+</div>
+</div>
 );
 }
 
@@ -1170,12 +1323,46 @@ import PrivacyPolicy from “./PrivacyPolicy”;
 export default function App() {
 const [user, setUser] = useState(null);
 const [page, setPage] = useState(“landing”);
+const [authChecked, setAuthChecked] = useState(false);
+
+// 자동 로그인: Firebase Auth 상태 감지
+useEffect(() => {
+const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+if (firebaseUser) {
+// Firebase에 로그인된 상태 — Firestore에서 uid/isAdmin 확인
+const email = firebaseUser.email;
+const snap = await getDocs(collection(db, “users”));
+let foundUid = null;
+let isAdmin = false;
+snap.forEach(d => {
+if (d.data().email === email) {
+foundUid = d.id;
+isAdmin = d.data().isAdmin || false;
+}
+});
+if (foundUid) {
+setUser({ uid: foundUid, isAdmin });
+setPage(“app”);
+}
+}
+setAuthChecked(true);
+});
+return () => unsubscribe();
+}, []);
+
+if (!authChecked) return (
+
+<div style={{ minHeight: "100vh", background: "#0f0f0f", display: "flex", alignItems: "center", justifyContent: "center" }}>
+<div style={{ color: "#555", fontSize: 14 }}>불러오는 중...</div>
+</div>
+);
+
 if (page === “privacy”) return <PrivacyPolicy />;
 if (page === “login”) return (
 <LoginScreen onLogin={(uid, isAdmin) => { setUser({ uid, isAdmin }); setPage(“app”); }} />
 );
 if (page === “app” && user) return (
-<WorkoutApp uid={user.uid} isAdmin={user.isAdmin} onLogout={() => { setUser(null); setPage(“landing”); }} />
+<WorkoutApp uid={user.uid} isAdmin={user.isAdmin} onLogout={() => { setUser(null); setPage(“landing”); auth.signOut(); }} />
 );
 return <LandingPage onStart={() => setPage(“login”)} />;
 }
