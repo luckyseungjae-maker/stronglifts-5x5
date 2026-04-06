@@ -1,7 +1,7 @@
 import { useState, useEffect } from “react”;
 import { db, auth } from “./firebase”;
 import { doc, getDoc, setDoc, deleteDoc, collection, getDocs, updateDoc, arrayUnion } from “firebase/firestore”;
-import { createUserWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from “firebase/auth”;
+import { createUserWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, updatePassword, reauthenticateWithCredential, EmailAuthProvider, signInWithEmailAndPassword } from “firebase/auth”;
 
 const EXERCISE_DESC = {
 “벤치프레스”: {
@@ -217,7 +217,9 @@ const ref = doc(db, “users”, uid);
 const snap = await getDoc(ref);
 if (!snap.exists()) return { ok: false, error: “존재하지 않는 아이디예요.” };
 if (snap.data().pw !== pw) return { ok: false, error: “비밀번호가 틀렸어요.” };
-// 로그인 기록 저장
+try {
+await signInWithEmailAndPassword(auth, snap.data().email, pw);
+} catch (e) {}
 await updateDoc(ref, {
 loginHistory: arrayUnion({ time: Date.now(), device: navigator.userAgent.includes(“Mobile”) ? “모바일” : “PC” })
 });
