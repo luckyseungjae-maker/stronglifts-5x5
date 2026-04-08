@@ -271,7 +271,7 @@ return [
 };
 
 // 중량 직접 입력 가능한 컴포넌트 (탭하면 input, blur시 확정)
-function WeightInput({ value, onChange, color = “#e8c96d”, step = 2.5, unit = “kg”, minVal = 0 }) {
+function WeightInput({ value, onChange, color = “#e8c96d”, unit = “kg”, minVal = 0 }) {
 const [editing, setEditing] = useState(false);
 const [raw, setRaw] = useState(””);
 
@@ -283,9 +283,7 @@ setEditing(true);
 const commitEdit = () => {
 const parsed = parseFloat(raw);
 if (!isNaN(parsed) && parsed >= minVal) {
-// 반올림: step 단위로 맞춤
-const rounded = Math.round(parsed / step) * step;
-onChange(Math.max(minVal, rounded));
+onChange(Math.max(minVal, parsed));
 }
 setEditing(false);
 };
@@ -689,7 +687,6 @@ return (
                 <WeightInput
                   value={initAccessoryWeights[name] || 0}
                   onChange={val => setInitAccessoryWeights(prev => Object.assign({}, prev, { [name]: val }))}
-                  step={2.5}
                 />
                 <button onClick={() => setInitAccessoryWeights(prev => Object.assign({}, prev, { [name]: (prev[name] || 0) + 2.5 }))}
                   style={{ width: 32, height: 32, borderRadius: 8, background: "#222", border: "1px solid #444", color: "#f0ede8", fontSize: 18, cursor: "pointer" }}>+</button>
@@ -716,7 +713,6 @@ return (
                 <WeightInput
                   value={initAccessoryWeights[name] || 0}
                   onChange={val => setInitAccessoryWeights(prev => Object.assign({}, prev, { [name]: val }))}
-                  step={2.5}
                 />
                 <button onClick={() => setInitAccessoryWeights(prev => Object.assign({}, prev, { [name]: (prev[name] || 0) + 2.5 }))}
                   style={{ width: 32, height: 32, borderRadius: 8, background: "#222", border: "1px solid #444", color: "#f0ede8", fontSize: 18, cursor: "pointer" }}>+</button>
@@ -1436,7 +1432,6 @@ style={{ width: 36, height: 36, borderRadius: 8, background: “#222”, border:
 <WeightInput
 value={w}
 onChange={val => setAccessoryWeights(prev => ({ …prev, [name]: val }))}
-step={2.5}
 />
 <button onClick={() => setAccessoryWeights(prev => ({ …prev, [name]: (prev[name] || 0) + 2.5 }))}
 style={{ width: 36, height: 36, borderRadius: 8, background: “#222”, border: “1px solid #444”, color: “#f0ede8”, fontSize: 20, cursor: “pointer” }}>+</button>
