@@ -270,6 +270,57 @@ return [
 ];
 };
 
+// 중량 직접 입력 가능한 컴포넌트 (탭하면 input, blur시 확정)
+function WeightInput({ value, onChange, color = “#e8c96d”, step = 2.5, unit = “kg”, minVal = 0 }) {
+const [editing, setEditing] = useState(false);
+const [raw, setRaw] = useState(””);
+
+const startEdit = () => {
+setRaw(value === 0 ? “” : String(value));
+setEditing(true);
+};
+
+const commitEdit = () => {
+const parsed = parseFloat(raw);
+if (!isNaN(parsed) && parsed >= minVal) {
+// 반올림: step 단위로 맞춤
+const rounded = Math.round(parsed / step) * step;
+onChange(Math.max(minVal, rounded));
+}
+setEditing(false);
+};
+
+if (editing) return (
+<input
+autoFocus
+type=“number”
+value={raw}
+onChange={e => setRaw(e.target.value)}
+onBlur={commitEdit}
+onKeyDown={e => { if (e.key === “Enter”) commitEdit(); if (e.key === “Escape”) setEditing(false); }}
+style={{
+width: 62, padding: “4px 6px”, background: “#111”, border: “1px solid “ + color,
+borderRadius: 8, color: color, fontSize: 15, fontWeight: 700, textAlign: “center”,
+outline: “none”, boxSizing: “border-box”
+}}
+/>
+);
+
+return (
+<span
+onClick={startEdit}
+style={{
+fontSize: 16, fontWeight: 700, color, minWidth: 62, textAlign: “center”,
+display: “inline-block”, padding: “4px 8px”, borderRadius: 8,
+border: “1px solid “ + color + “33”, cursor: “text”, userSelect: “none”
+}}
+title=“탭해서 직접 입력”
+>
+{value}{unit}
+</span>
+);
+}
+
 function ExerciseDescPanel({ name, onClose }) {
 const desc = EXERCISE_DESC[name];
 if (!desc) return null;
@@ -635,7 +686,11 @@ return (
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <button onClick={() => setInitAccessoryWeights(prev => Object.assign({}, prev, { [name]: Math.max(0, (prev[name] || 0) - 2.5) }))}
                   style={{ width: 32, height: 32, borderRadius: 8, background: "#222", border: "1px solid #444", color: "#f0ede8", fontSize: 18, cursor: "pointer" }}>-</button>
-                <span style={{ fontSize: 14, fontWeight: 700, color: "#e8c96d", minWidth: 50, textAlign: "center" }}>{w}kg</span>
+                <WeightInput
+                  value={initAccessoryWeights[name] || 0}
+                  onChange={val => setInitAccessoryWeights(prev => Object.assign({}, prev, { [name]: val }))}
+                  step={2.5}
+                />
                 <button onClick={() => setInitAccessoryWeights(prev => Object.assign({}, prev, { [name]: (prev[name] || 0) + 2.5 }))}
                   style={{ width: 32, height: 32, borderRadius: 8, background: "#222", border: "1px solid #444", color: "#f0ede8", fontSize: 18, cursor: "pointer" }}>+</button>
               </div>
@@ -658,7 +713,11 @@ return (
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <button onClick={() => setInitAccessoryWeights(prev => Object.assign({}, prev, { [name]: Math.max(0, (prev[name] || 0) - 2.5) }))}
                   style={{ width: 32, height: 32, borderRadius: 8, background: "#222", border: "1px solid #444", color: "#f0ede8", fontSize: 18, cursor: "pointer" }}>-</button>
-                <span style={{ fontSize: 14, fontWeight: 700, color: "#e8c96d", minWidth: 50, textAlign: "center" }}>{w}kg</span>
+                <WeightInput
+                  value={initAccessoryWeights[name] || 0}
+                  onChange={val => setInitAccessoryWeights(prev => Object.assign({}, prev, { [name]: val }))}
+                  step={2.5}
+                />
                 <button onClick={() => setInitAccessoryWeights(prev => Object.assign({}, prev, { [name]: (prev[name] || 0) + 2.5 }))}
                   style={{ width: 32, height: 32, borderRadius: 8, background: "#222", border: "1px solid #444", color: "#f0ede8", fontSize: 18, cursor: "pointer" }}>+</button>
               </div>
@@ -1374,7 +1433,11 @@ return (
 <div style={{ display: “flex”, alignItems: “center”, gap: 8 }}>
 <button onClick={() => setAccessoryWeights(prev => ({ …prev, [name]: Math.max(0, (prev[name] || 0) - 2.5) }))}
 style={{ width: 36, height: 36, borderRadius: 8, background: “#222”, border: “1px solid #444”, color: “#f0ede8”, fontSize: 20, cursor: “pointer” }}>-</button>
-<span style={{ fontSize: 14, fontWeight: 700, color: “#e8c96d”, minWidth: 55, textAlign: “center” }}>{w}kg</span>
+<WeightInput
+value={w}
+onChange={val => setAccessoryWeights(prev => ({ …prev, [name]: val }))}
+step={2.5}
+/>
 <button onClick={() => setAccessoryWeights(prev => ({ …prev, [name]: (prev[name] || 0) + 2.5 }))}
 style={{ width: 36, height: 36, borderRadius: 8, background: “#222”, border: “1px solid #444”, color: “#f0ede8”, fontSize: 20, cursor: “pointer” }}>+</button>
 </div>
